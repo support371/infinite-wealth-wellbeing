@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AppUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  fullName  String?
+  status    String   @default("invited")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  roles     UserRole[]
+  auditLogs AuditLog[]
+}
+
+model Role {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String @id @default(cuid())
+  action      String @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  roleId String
+  user   AppUser @relation(fields: [userId], references: [id])
+  role   Role @relation(fields: [roleId], references: [id])
+  createdAt DateTime @default(now())
+  @@unique([userId, roleId])
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+  role         Role @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  @@unique([roleId, permissionId])
+}
+
+model MemberProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  status    String   @default("lead")
+  tier      String?
+  interests String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PractitionerProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  status            String   @default("draft")
+  specialties       String[]
+  bio               String?
+  credentialSummary String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model ComplianceRecord {
+  id                String   @id @default(cuid())
+  title             String
+  recordType        String
+  issuingBody       String?
+  documentReference String?
+  effectiveDate     DateTime?
+  reviewDate        DateTime?
+  status            String   @default("pending_review")
+  fileUrl           String?
+  reviewer          String?
+  approvalNotes     String?
+  publicVisibility  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model WorkflowEvent {
+  id         String   @id @default(cuid())
+  workflow   String
+  entityType String
+  entityId   String?
+  fromState  String?
+  toState    String
+  actorId    String?
+  payload    Json?
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      AppUser? @relation(fields: [actorId], references: [id])
+  action     String
+  targetType String
+  targetId   String?
+  reason     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+}
+
+model MediaAsset {
+  id                   String   @id @default(cuid())
+  title                String
+  description          String?
+  assetType            String
+  url                  String?
+  accessibilityCaption String?
+  status               String   @default("upload_ready")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model NotificationEvent {
+  id        String   @id @default(cuid())
+  channel   String
+  eventType String
+  recipient String?
+  status    String   @default("queued")
+  payload   Json?
+  createdAt DateTime @default(now())
+}
