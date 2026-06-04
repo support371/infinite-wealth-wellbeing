@@ -162,12 +162,12 @@ function Navbar() {
               <li key={item.label} className="nav-item">
                 {item.children ? (
                   <>
-                    <button className={`nav-link${loc.pathname.startsWith(item.href) ? ' active' : ''}`}>
+                    <Link to={item.href} className={`nav-link${loc.pathname.startsWith(item.href) ? ' active' : ''}`}>
                       {item.label}
                       <svg className="nav-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M4 6l4 4 4-4" />
                       </svg>
-                    </button>
+                    </Link>
                     <div className="nav-dropdown">
                       {item.children.featured && (
                         <div style={{ padding: '4px 4px 0' }}>
