@@ -38,6 +38,7 @@ const I = {
   trust: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&q=80',
   members: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&q=80',
   summit: 'https://images.unsplash.com/photo-1492538368677-f6e0afe31dcc?w=1200&q=80',
+  leonard: 'https://base44.app/api/apps/69d42975b7b1794c3dc01661/files/mp/public/69d42975b7b1794c3dc01661/74db28267_file_30.jpg',
 };
 
 /* ═══════════════════════════════════════════
@@ -357,7 +358,7 @@ function Home() {
           <div className="hero-label-row">
             <div className="hero-pill">
               <div className="hero-pill-dot" />
-              <span>Trust-Led · Compliance-Aware · Community-First</span>
+              <span>An Infinite Abundance · Hartford, CT · Ambassador-Led</span>
             </div>
             <div className="hero-label-line" />
           </div>
@@ -369,7 +370,7 @@ function Home() {
           </h1>
 
           <p className="hero-body">
-            A modern sanctuary where financial empowerment, holistic health, and authentic happiness converge — guided by wisdom, governed by trust, open to everyone.
+            An Infinite Abundance is a modern sanctuary where financial empowerment, holistic health, and authentic happiness converge — guided by the vision of Leonard M. Diana, Ambassador of the Alignable Alliance, Hartford CT.
           </p>
 
           <div className="hero-cta-row">
@@ -655,7 +656,7 @@ function Home() {
           </div>
           <div className="team-grid">
             {[
-              { img: I.p1, name: 'Dr. Amelia Foster', role: 'Holistic Health Coach', bio: 'Board-certified integrative physician specializing in mind-body wellness and chronic stress reversal.' },
+              { img: I.leonard, name: 'Leonard M. Diana', role: 'Founder & Principal — An Infinite Abundance', bio: 'Visionary founder, Alignable Alliance Ambassador of Hartford CT, dedicated to holistic wealth and community prosperity.' },
               { img: I.p2, name: 'James Okafor, CFP', role: 'Wealth Strategist', bio: 'Certified Financial Planner guiding families from debt to multi-generational wealth for 15 years.' },
               { img: I.p3, name: 'Dr. Priya Sharma', role: 'Clinical Psychologist', bio: 'Trauma-informed therapist integrating CBT, mindfulness, and positive psychology for deep healing.' },
               { img: I.p4, name: 'Michael Torres', role: 'Life & Business Coach', bio: 'ICF-certified executive coach aligning career trajectory with deepest personal values.' },
@@ -778,15 +779,15 @@ function About() {
         <div className="container">
           <div className="split split-ratio-2-3">
             <div className="img-composition">
-              <img src={I.about1} alt="Founders" className="img-composition-main" />
+              <img src={I.leonard} alt="Leonard M. Diana — Founder" className="img-composition-main" />
             </div>
             <div className="content-block">
               <span className="label">Our Foundation</span>
               <div className="divider"><div className="divider-line" /><div className="divider-dot" /></div>
-              <h2>A Vision Born from Necessity</h2>
-              <p style={{ color: 'var(--text-muted)' }}>Infinite Wealth &amp; Well-being was founded when a group of practitioners, educators, and community leaders recognized a profound gap: most wellness and wealth platforms served the already-privileged, leaving everyone else behind.</p>
-              <p style={{ color: 'var(--text-muted)' }}>We set out to build something radically different — an organization governed not by profit, but by the genuine well-being of every member it serves. Every policy, every program, every practitioner relationship is filtered through one question: <em>does this truly serve our community?</em></p>
-              <p style={{ color: 'var(--text-muted)' }}>Today, we are a living, breathing organism of human potential — expanding in reach while staying rooted in our founding values of trust, transparency, and transformative care.</p>
+              <h2>Leonard M. Diana — A Vision Born from Purpose</h2>
+              <p style={{ color: 'var(--text-muted)' }}>An Infinite Abundance was founded by Leonard M. Diana — entrepreneur, community ambassador, and believer in the transformative power of holistic prosperity. Leonard recognized that true abundance goes beyond money: it is health, connection, purpose, and peace working together.</p>
+              <p style={{ color: 'var(--text-muted)' }}>As the formal Ambassador of the Alignable Alliance of Hartford, CT, Leonard built An Infinite Abundance with a clear mandate: serve the community first, always. Every program, every partnership, and every practitioner relationship is filtered through one question: <em>does this genuinely transform a life?</em></p>
+              <p style={{ color: 'var(--text-muted)' }}>Today, An Infinite Abundance is a thriving digital headquarters for wealth empowerment, holistic health, community coaching, and governance-led stewardship — expanding nationally while remaining rooted in the Hartford CT community that inspired it.</p>
               <div style={{ marginTop: 32 }}>
                 <Link to="/membership/apply" className="btn btn-gold btn-lg">Join Our Mission <ArrowRight size={16} /></Link>
               </div>
@@ -805,10 +806,10 @@ function About() {
           </div>
           <div className="team-grid">
             {[
-              { img: I.p1, name: 'Dr. Eleanor James', role: 'Founder & Chief Visionary', bio: 'Holistic health pioneer with 20 years building wellness institutions rooted in equity and access for all.' },
-              { img: I.p2, name: 'Marcus Adeyemi', role: 'Director of Wealth Programs', bio: 'Former investment banker turned financial educator, committed to democratizing wealth knowledge globally.' },
-              { img: I.p3, name: 'Sarah Mitchell', role: 'Lead Trustee & Compliance', bio: 'Legal and governance expert ensuring every operation meets the highest ethical and regulatory standards.' },
-              { img: I.p4, name: 'Dr. Kwame Osei', role: 'Head of Practitioner Standards', bio: 'Clinical psychologist developing the framework for practitioner verification and member safety protocols.' },
+              { img: I.leonard, name: 'Leonard M. Diana', role: 'Founder & Owner — An Infinite Abundance', bio: 'Visionary entrepreneur, formal Ambassador of the Alignable Alliance of Hartford, CT, and the driving force behind An Infinite Abundance. Leonard built this platform on the conviction that true prosperity is holistic — weaving financial empowerment, health, and community into one lived experience.' },
+              { img: I.p2, name: 'Marcus Adeyemi', role: 'Director of Wealth Programs', bio: 'Certified Financial Planner and educator committed to democratizing wealth knowledge across every income level.' },
+              { img: I.p3, name: 'Sarah Mitchell', role: 'Lead Trustee & Compliance Officer', bio: 'Legal and governance expert ensuring every operation meets the highest ethical and regulatory standards.' },
+              { img: I.p4, name: 'Dr. Kwame Osei', role: 'Head of Practitioner Standards', bio: 'Clinical psychologist overseeing practitioner verification and member safety protocol development.' },
             ].map(p => (
               <div className="team-card" key={p.name}>
                 <div className="team-card-img-wrap">
@@ -1326,3 +1327,4 @@ function App() {
 }
 
 createRoot(document.getElementById('root')).render(<App />);
+
