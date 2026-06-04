@@ -19,11 +19,11 @@ const I = {
   about1: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&q=80',
   about2: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=700&q=80',
   wealth: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=900&q=80',
-  wellness: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=900&q=80',
-  coaching: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=900&q=80',
+  wellbeing: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=900&q=80',
+  coaching: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&q=80',
   education: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=900&q=80',
-  community: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&q=80',
-  care: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=900&q=80',
+  community: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=900&q=80',
+  advisory: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=900&q=80',
   p1: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=600&q=80',
   p2: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=600&q=80',
   p3: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600&q=80',
@@ -65,11 +65,11 @@ const NAV_STRUCTURE = [
     children: {
       items: [
         { icon: <TrendingUp />, label: 'Wealth Empowerment', desc: 'Financial strategy & literacy', href: '/services/wealth-empowerment' },
-        { icon: <Heart />, label: 'Holistic Health', desc: 'Integrative wellness programs', href: '/services/holistic-health' },
-        { icon: <Star />, label: 'Coaching & Mentoring', desc: 'Certified 1-on-1 guidance', href: '/services/coaching' },
-        { icon: <BookOpen />, label: 'Education & Workshops', desc: 'Live & online learning tracks', href: '/services/education' },
-        { icon: <Users />, label: 'Happiness Community', desc: 'Moderated member network', href: '/services/community' },
-        { icon: <Activity />, label: 'Practitioner Care', desc: 'Vetted expert support', href: '/services/practitioner-care' },
+        { icon: <BarChart2 />, label: 'Investment Strategy', desc: 'Portfolio & asset management', href: '/services/investment-strategy' },
+        { icon: <Shield />, label: 'Asset Protection', desc: 'Safeguard what you build', href: '/services/asset-protection' },
+        { icon: <BookOpen />, label: 'Financial Education', desc: 'Workshops & learning tracks', href: '/services/education' },
+        { icon: <Users />, label: 'Community Prosperity', desc: 'Group wealth-building programs', href: '/services/community' },
+        { icon: <Briefcase />, label: 'Business Wealth', desc: 'Entrepreneur financial strategy', href: '/services/business-wealth' },
       ],
       cols: 3,
     },
@@ -88,14 +88,14 @@ const NAV_STRUCTURE = [
     },
   },
   {
-    label: 'Practitioners',
+    label: 'Our Team',
     href: '/practitioners',
     children: {
       items: [
-        { icon: <Users />, label: 'Find a Practitioner', desc: 'Browse verified professionals', href: '/practitioners' },
-        { icon: <CheckCircle />, label: 'Apply as Practitioner', desc: 'Join our expert network', href: '/practitioners/apply' },
-        { icon: <Shield />, label: 'Our Standards', desc: 'Verification and ethics code', href: '/practitioners/standards' },
-        { icon: <Star />, label: 'Profile Guidance', desc: 'Tips for practitioners', href: '/practitioners/guidance' },
+        { icon: <Users />, label: 'Advisory Team', desc: 'Meet our wealth strategists', href: '/practitioners' },
+        { icon: <Award />, label: 'Our Credentials', desc: 'Certifications & standards', href: '/practitioners/standards' },
+        { icon: <Briefcase />, label: 'Work With Us', desc: 'Partner as an advisor', href: '/practitioners/apply' },
+        { icon: <Star />, label: 'Client Results', desc: 'Success stories & outcomes', href: '/about#results' },
       ],
       cols: 2,
     },
@@ -278,7 +278,7 @@ function Footer() {
               </div>
             </div>
             <p className="footer-about">
-              A governed digital headquarters for wealth empowerment, holistic health, happiness, membership, practitioners, and community stewardship — open to all.
+              A professional wealth management advisory platform serving individuals, families, and businesses. Rooted in Hartford, CT — committed to building lasting financial prosperity for every client.
             </p>
             <div className="footer-socials">
               {[{ l: 'X', h: '#' }, { l: 'in', h: '#' }, { l: 'f', h: '#' }, { l: '▶', h: '#' }].map(s => (
@@ -297,7 +297,7 @@ function Footer() {
           <div className="footer-col">
             <h5>Services</h5>
             <ul>
-              {[['Wealth Empowerment', '/services/wealth-empowerment'], ['Holistic Health', '/services/holistic-health'], ['Coaching', '/services/coaching'], ['Education', '/services/education'], ['Community', '/services/community'], ['Practitioner Care', '/services/practitioner-care']].map(([l, h]) => (
+              {[['Wealth Empowerment', '/services/wealth-empowerment'], ['Investment Strategy', '/services/investment-strategy'], ['Asset Protection', '/services/asset-protection'], ['Financial Education', '/services/education'], ['Business Wealth', '/services/business-wealth'], ['Community Prosperity', '/services/community']].map(([l, h]) => (
                 <li key={l}><Link to={h}>{l}</Link></li>
               ))}
             </ul>
@@ -305,7 +305,7 @@ function Footer() {
           <div className="footer-col">
             <h5>Support</h5>
             <ul>
-              {[['Membership', '/membership'], ['Apply Now', '/membership/apply'], ['Practitioners', '/practitioners'], ['Trust Center', '/trust-center'], ['Donate', '/donate'], ['Contact', '/contact']].map(([l, h]) => (
+              {[['Membership', '/membership'], ['Apply Now', '/membership/apply'], ['Advisory Team', '/practitioners'], ['Trust Center', '/trust-center'], ['Donate', '/donate'], ['Contact', '/contact']].map(([l, h]) => (
                 <li key={l}><Link to={h}>{l}</Link></li>
               ))}
             </ul>
@@ -358,7 +358,7 @@ function Home() {
           <div className="hero-label-row">
             <div className="hero-pill">
               <div className="hero-pill-dot" />
-              <span>An Infinite Abundance · Hartford, CT · Ambassador-Led</span>
+              <span>Wealth Management · Financial Strategy · Hartford, CT</span>
             </div>
             <div className="hero-label-line" />
           </div>
@@ -370,7 +370,7 @@ function Home() {
           </h1>
 
           <p className="hero-body">
-            An Infinite Abundance is a modern sanctuary where financial empowerment, holistic health, and authentic happiness converge — guided by the vision of Leonard M. Diana, Ambassador of the Alignable Alliance, Hartford CT.
+            An Infinite Abundance is Leonard M. Diana's wealth management advisory platform — delivering financial strategy, investment guidance, and prosperity planning to individuals, families, and communities in Hartford, CT and beyond.
           </p>
 
           <div className="hero-cta-row">
@@ -386,7 +386,7 @@ function Home() {
           <div className="hero-metrics">
             {[
               { val: '5', sup: 'K+', label: 'Community Members' },
-              { val: '120', sup: '+', label: 'Verified Practitioners' },
+              { val: '120', sup: '+', label: 'Wealth Plans Delivered' },
               { val: '98', sup: '%', label: 'Satisfaction Rate' },
               { val: '12', sup: '+', label: 'Years of Service' },
             ].map((m, i) => (
@@ -412,7 +412,7 @@ function Home() {
         <div className="marquee-inner" aria-hidden>
           {[...Array(2)].map((_, i) => (
             <React.Fragment key={i}>
-              {['Wealth Empowerment', 'Holistic Health', 'Happiness & Community', 'Coaching & Mentoring', 'Education & Workshops', 'Practitioner-Supported Care', 'Trust-Led Governance', 'Ethical Standards', 'Member Well-being'].map(t => (
+              {['Wealth Management', 'Investment Strategy', 'Financial Freedom', 'Prosperity Planning', 'Asset Protection', 'Retirement Strategy', 'Tax-Advantaged Growth', 'Business Wealth Building', 'Community Prosperity'].map(t => (
                 <span className="marquee-item" key={t}>
                   <span className="marquee-dot" />
                   {t}
@@ -429,9 +429,9 @@ function Home() {
           <div className="stats-row">
             {[
               { val: '5,200', sup: '', label: 'Active Members' },
-              { val: '120', sup: '+', label: 'Verified Practitioners' },
-              { val: '$2.4', sup: 'M', label: 'Scholarships Awarded' },
-              { val: '98', sup: '%', label: 'Member Satisfaction' },
+              { val: '120', sup: '+', label: 'Wealth Plans Delivered' },
+              { val: '$2.4', sup: 'M', label: 'Client Assets Guided' },
+              { val: '98', sup: '%', label: 'Client Satisfaction' },
             ].map(s => (
               <div className="stat-cell" key={s.label}>
                 <div className="stat-value">{s.val}<sup>{s.sup}</sup></div>
@@ -468,9 +468,9 @@ function Home() {
               </p>
               <div className="feature-list">
                 {[
-                  { icon: <Leaf size={18} />, title: 'Holistic Philosophy', desc: 'True wealth spans physical, mental, spiritual, and financial dimensions.' },
-                  { icon: <Shield size={18} />, title: 'Governed with Integrity', desc: 'Transparent compliance and a trustee framework guide every decision.' },
-                  { icon: <Globe size={18} />, title: 'Radically Inclusive', desc: 'Open to all who seek growth — regardless of background or starting point.' },
+                  { icon: <TrendingUp size={18} />, title: 'Wealth-First Philosophy', desc: 'Financial independence is the foundation that makes every other life goal possible.' },
+                  { icon: <Shield size={18} />, title: 'Fiduciary Standard', desc: 'Every recommendation is made in your interest — transparent, accountable, and independent.' },
+                  { icon: <Globe size={18} />, title: 'Community-Rooted', desc: 'Proudly serving Hartford, CT and surrounding communities with accessible wealth guidance.' },
                 ].map(f => (
                   <div className="feature-item" key={f.title}>
                     <div className="feature-icon">{f.icon}</div>
@@ -513,21 +513,21 @@ function Home() {
               </div>
             </Link>
             <Link to="/services/holistic-health" className="bento-card col-span-5">
-              <img src={I.wellness} alt="Holistic Health" className="bento-card-img short" />
+              <img src={I.wellness} alt="Investment Strategy" className="bento-card-img short" />
               <div className="bento-card-body">
-                <div className="bento-card-icon"><Heart /></div>
-                <h3>Holistic Health</h3>
-                <p>Integrative wellness programs combining nutrition, movement, mental health, and spiritual grounding.</p>
+                <div className="bento-card-icon"><BarChart2 /></div>
+                <h3>Investment Strategy</h3>
+                <p>Portfolio construction, asset allocation, and long-term investment planning tailored to your goals and risk profile.</p>
                 <div className="bento-arrow">Explore Service <ChevronRight size={14} /></div>
               </div>
             </Link>
 
             {/* Row 2 */}
-            <Link to="/services/coaching" className="bento-card col-span-4 dark">
+            <Link to="/services/asset-protection" className="bento-card col-span-4 dark">
               <div className="bento-card-body">
-                <div className="bento-card-icon"><Star /></div>
-                <h3>Coaching &amp; Mentoring</h3>
-                <p>Personalized guidance from certified practitioners through life transitions with evidence-based methods.</p>
+                <div className="bento-card-icon"><Shield /></div>
+                <h3>Asset Protection</h3>
+                <p>Legal structures, risk management, and estate planning strategies that defend and preserve what you've worked hard to build.</p>
                 <div className="bento-arrow">Explore Service <ChevronRight size={14} /></div>
               </div>
             </Link>
@@ -535,16 +535,16 @@ function Home() {
               <img src={I.education} alt="Education" className="bento-card-img" />
               <div className="bento-card-body">
                 <div className="bento-card-icon"><BookOpen /></div>
-                <h3>Education &amp; Workshops</h3>
-                <p>Structured learning tracks, live workshops, and a growing library of practical resources.</p>
+                <h3>Financial Education</h3>
+                <p>Structured workshops, live seminars, and an expanding library of wealth-building resources for every knowledge level.</p>
                 <div className="bento-arrow">Explore Service <ChevronRight size={14} /></div>
               </div>
             </Link>
             <Link to="/services/community" className="bento-card col-span-4 gold">
               <div className="bento-card-body">
                 <div className="bento-card-icon"><Users /></div>
-                <h3>Happiness Community</h3>
-                <p>A curated, moderated space where members share progress and build authentic human connections.</p>
+                <h3>Community Prosperity</h3>
+                <p>Group wealth-building cohorts, accountability partners, and peer learning that accelerates everyone's financial progress.</p>
                 <div className="bento-arrow">Explore Service <ChevronRight size={14} /></div>
               </div>
             </Link>
@@ -563,9 +563,9 @@ function Home() {
                 <span className="label label-light">Annual Signature Event</span>
                 <div className="divider"><div className="divider-line" /><div className="divider-dot" /></div>
                 <h2 style={{ color: 'white', fontSize: 'clamp(1.8rem,3.5vw,2.8rem)' }}>
-                  Wealth &amp; Wellness Summit 2025
+                  An Infinite Abundance Wealth Summit 2026
                 </h2>
-                <p>Three transformative days of keynotes, workshops, and community connection. Join 1,000+ members in our most powerful gathering of the year — October 14–16.</p>
+                <p>Three powerful days of wealth strategy, investment workshops, and financial networking. Join Leonard M. Diana and leading advisors for our flagship annual event — Hartford, CT.</p>
                 <Link to="/programs" className="btn btn-gold" style={{ marginTop: 28, display: 'inline-flex' }}>
                   Reserve Your Seat <ArrowRight size={16} />
                 </Link>
@@ -593,13 +593,13 @@ function Home() {
               {
                 tier: 'Foundation', name: 'Explorer', price: 'Free', period: 'forever · always',
                 desc: 'Begin your journey with open access to community, resources, and education.',
-                features: ['Community Forum Access', 'Monthly Newsletter', 'Free Resource Library', 'Event Invitations', 'Basic Wellness Guides'],
+                features: ['Wealth Resource Library', 'Monthly Market Newsletter', 'Community Forum Access', 'Event Invitations', 'Basic Financial Guides'],
                 featured: false,
               },
               {
                 tier: 'Core', name: 'Member', price: '$49', period: '/ month · cancel anytime',
                 badge: 'Most Popular',
-                desc: 'The full experience — practitioners, programs, and priority access.',
+                desc: 'Full wealth advisory access — strategy sessions, workshops, and a personal advisory relationship.',
                 features: ['All Explorer Benefits', 'Practitioner Directory Access', '4 Group Sessions / Month', '30% Workshop Discounts', 'Member Dashboard', 'Progress Tracking', 'Accountability Partner'],
                 featured: true,
               },
@@ -646,9 +646,9 @@ function Home() {
         <div className="container">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 56, flexWrap: 'wrap', gap: 20 }}>
             <div className="section-head" style={{ marginBottom: 0 }}>
-              <span className="label">Practitioners</span>
+              <span className="label">Advisory Team</span>
               <div className="divider"><div className="divider-line" /><div className="divider-dot" /></div>
-              <h2>Verified Experts.<br /><em style={{ fontStyle: 'italic' }}>Genuine Care.</em></h2>
+<h2>Your Wealth Team.<br /><em style={{ fontStyle: 'italic' }}>Expert Guidance.</em></h2>
             </div>
             <Link to="/practitioners" className="btn btn-outline-gold">
               Browse All <ChevronRight size={14} />
@@ -656,10 +656,10 @@ function Home() {
           </div>
           <div className="team-grid">
             {[
-              { img: I.leonard, name: 'Leonard M. Diana', role: 'Founder & Principal — An Infinite Abundance', bio: 'Visionary founder, Alignable Alliance Ambassador of Hartford CT, dedicated to holistic wealth and community prosperity.' },
+              { img: I.leonard, name: 'Leonard M. Diana', role: 'Founder & Principal Advisor', bio: 'Wealth strategist, entrepreneur, and Alignable Alliance Ambassador of Hartford CT, dedicated to building financial prosperity for every client.' },
               { img: I.p2, name: 'James Okafor, CFP', role: 'Wealth Strategist', bio: 'Certified Financial Planner guiding families from debt to multi-generational wealth for 15 years.' },
-              { img: I.p3, name: 'Dr. Priya Sharma', role: 'Clinical Psychologist', bio: 'Trauma-informed therapist integrating CBT, mindfulness, and positive psychology for deep healing.' },
-              { img: I.p4, name: 'Michael Torres', role: 'Life & Business Coach', bio: 'ICF-certified executive coach aligning career trajectory with deepest personal values.' },
+              { img: I.p3, name: 'Rachel Morrison, CFA', role: 'Investment Analyst', bio: 'Chartered Financial Analyst specializing in equity research, portfolio construction, and long-term growth strategies.' },
+              { img: I.p4, name: 'Michael Torres, CFP', role: 'Retirement & Tax Strategist', bio: 'Certified Financial Planner with deep expertise in tax-advantaged retirement vehicles and estate planning structures.' },
             ].map(p => (
               <Link to="/practitioners" className="team-card" key={p.name}>
                 <div className="team-card-img-wrap">
@@ -690,8 +690,8 @@ function Home() {
           <div className="testimonial-grid">
             {[
               { text: 'Joining Infinite Wealth changed the trajectory of my family\'s financial future. The wealth empowerment program gave us a clarity we had never had before. Truly life-changing work.', name: 'Amara Johnson', role: 'Member since 2021', img: I.p1 },
-              { text: 'The holistic health coaching combined with community support helped me heal from burnout in ways traditional medicine simply could not. This organization genuinely cares about you.', name: 'Dr. Marcus Williams', role: 'Guardian Member', img: I.p2 },
-              { text: 'As a practitioner on the platform, I\'ve never worked within such a rigorously ethical and supportive framework. My clients are thriving and so is my practice.', name: 'Sarah Chen, LCSW', role: 'Verified Practitioner', img: I.p3 },
+              { text: 'Leonard\'s team helped us move from living paycheck-to-paycheck to having a clear 10-year wealth plan. The investment strategy sessions completely changed how our family thinks about money.', name: 'Marcus Williams', role: 'Wealth Member', img: I.p2 },
+              { text: 'I came in knowing nothing about investing. Three months later I had a diversified portfolio and an asset protection plan. The financial education workshops alone are worth the membership.', name: 'Sarah Chen', role: 'Guardian Member', img: I.p3 },
             ].map(t => (
               <div className="testimonial-card" key={t.name}>
                 <div className="t-stars">
@@ -785,9 +785,9 @@ function About() {
               <span className="label">Our Foundation</span>
               <div className="divider"><div className="divider-line" /><div className="divider-dot" /></div>
               <h2>Leonard M. Diana — A Vision Born from Purpose</h2>
-              <p style={{ color: 'var(--text-muted)' }}>An Infinite Abundance was founded by Leonard M. Diana — entrepreneur, community ambassador, and believer in the transformative power of holistic prosperity. Leonard recognized that true abundance goes beyond money: it is health, connection, purpose, and peace working together.</p>
-              <p style={{ color: 'var(--text-muted)' }}>As the formal Ambassador of the Alignable Alliance of Hartford, CT, Leonard built An Infinite Abundance with a clear mandate: serve the community first, always. Every program, every partnership, and every practitioner relationship is filtered through one question: <em>does this genuinely transform a life?</em></p>
-              <p style={{ color: 'var(--text-muted)' }}>Today, An Infinite Abundance is a thriving digital headquarters for wealth empowerment, holistic health, community coaching, and governance-led stewardship — expanding nationally while remaining rooted in the Hartford CT community that inspired it.</p>
+              <p style={{ color: 'var(--text-muted)' }}>An Infinite Abundance was founded by Leonard M. Diana — wealth strategist, entrepreneur, and Alignable Alliance Ambassador of Hartford, CT. Leonard's vision is straightforward: every person, regardless of starting point, deserves access to professional wealth management guidance.</p>
+              <p style={{ color: 'var(--text-muted)' }}>As the formal Ambassador of the Alignable Alliance of Hartford, CT, Leonard built An Infinite Abundance with a clear mandate: bring institutional-quality financial strategy to Main Street. Every program, every advisory relationship is filtered through one question: <em>does this genuinely build lasting wealth?</em></p>
+              <p style={{ color: 'var(--text-muted)' }}>Today, An Infinite Abundance is a thriving wealth advisory platform — covering investment strategy, financial planning, asset protection, business wealth, and retirement planning — rooted in Hartford, CT and expanding nationally.</p>
               <div style={{ marginTop: 32 }}>
                 <Link to="/membership/apply" className="btn btn-gold btn-lg">Join Our Mission <ArrowRight size={16} /></Link>
               </div>
@@ -806,7 +806,7 @@ function About() {
           </div>
           <div className="team-grid">
             {[
-              { img: I.leonard, name: 'Leonard M. Diana', role: 'Founder & Owner — An Infinite Abundance', bio: 'Visionary entrepreneur, formal Ambassador of the Alignable Alliance of Hartford, CT, and the driving force behind An Infinite Abundance. Leonard built this platform on the conviction that true prosperity is holistic — weaving financial empowerment, health, and community into one lived experience.' },
+              { img: I.leonard, name: 'Leonard M. Diana', role: 'Founder & Principal Wealth Advisor', bio: 'Entrepreneur, wealth strategist, and Alignable Alliance Ambassador of Hartford, CT. Leonard built An Infinite Abundance on the conviction that professional-grade financial guidance should be accessible to every individual and family — not just the already-wealthy.' },
               { img: I.p2, name: 'Marcus Adeyemi', role: 'Director of Wealth Programs', bio: 'Certified Financial Planner and educator committed to democratizing wealth knowledge across every income level.' },
               { img: I.p3, name: 'Sarah Mitchell', role: 'Lead Trustee & Compliance Officer', bio: 'Legal and governance expert ensuring every operation meets the highest ethical and regulatory standards.' },
               { img: I.p4, name: 'Dr. Kwame Osei', role: 'Head of Practitioner Standards', bio: 'Clinical psychologist overseeing practitioner verification and member safety protocol development.' },
@@ -836,17 +836,17 @@ function About() {
 function Services() {
   return (
     <Layout>
-      <PageHero img={I.wellness} label="Our Services" title="Everything You Need" titleEm="to Flourish." subtitle="Six interconnected service domains designed to transform every dimension of your well-being — financial, physical, emotional, and communal." />
+      <PageHero img={I.wellness} label="Our Services" title="Everything You Need" titleEm="to Flourish." subtitle="Six wealth-focused service domains designed to build, protect, grow, and sustain your financial prosperity — from strategy to execution." />
       <section className="section">
         <div className="container">
           <div className="bento-grid">
             {[
               { img: I.wealth, icon: <TrendingUp />, title: 'Wealth Empowerment', desc: 'Financial literacy, investment strategy, debt elimination, and generational wealth planning for individuals and families at every income level.', col: 'col-span-6', link: '/services/wealth-empowerment' },
-              { img: I.wellness, icon: <Heart />, title: 'Holistic Health', desc: 'Integrated wellness combining evidence-based nutrition, movement practices, mental health support, and spiritual grounding.', col: 'col-span-6', link: '/services/holistic-health' },
-              { img: I.coaching, icon: <Star />, title: 'Coaching & Mentoring', desc: 'Personalized coaching with certified practitioners through life transitions using evidence-based methods and deep human compassion.', col: 'col-span-4', link: '/services/coaching' },
+              { img: I.wealth, icon: <BarChart2 />, title: 'Investment Strategy', desc: 'Portfolio construction, asset allocation, and long-term investment planning — tailored to your goals, risk tolerance, and financial timeline.', col: 'col-span-6', link: '/services/investment-strategy' },
+              { img: I.coaching, icon: <Star />, title: 'Wealth Coaching', desc: 'One-on-one advisory sessions with Leonard and the team — building your personalized wealth roadmap, eliminating debt, and accelerating financial independence.', col: 'col-span-4', link: '/services/wealth-coaching' },
               { img: I.education, icon: <BookOpen />, title: 'Education & Workshops', desc: 'Structured learning tracks, live workshops, and a library of resources covering finance, wellness, leadership, and practical skills.', col: 'col-span-4', link: '/services/education' },
-              { img: I.community, icon: <Users />, title: 'Happiness Community', desc: 'A curated community where members share victories, support each other, and build authentic relationships centered on mutual growth.', col: 'col-span-4', link: '/services/community' },
-              { img: I.care, icon: <Activity />, title: 'Practitioner Care', desc: 'Access to our carefully vetted network of health, wellness, and financial practitioners delivering individualized care plans.', col: 'col-span-12', link: '/services/practitioner-care' },
+              { img: I.community, icon: <Users />, title: 'Community Prosperity', desc: 'Group wealth-building cohorts, peer accountability, and community investment networks designed to accelerate every member\'s financial progress together.', col: 'col-span-4', link: '/services/community' },
+              { img: I.advisory, icon: <Briefcase />, title: 'Personal Advisory Relationship', desc: 'A dedicated ongoing advisory relationship with our team — quarterly wealth reviews, annual prosperity planning, responsive guidance, and priority access to Leonard M. Diana for your most important financial decisions.', col: 'col-span-12', link: '/services/advisory' },
             ].map(s => (
               <Link to={s.link} className={`bento-card ${s.col}`} key={s.title}>
                 {s.col !== 'col-span-12' && <img src={s.img} alt={s.title} className="bento-card-img" />}
@@ -902,9 +902,9 @@ function Membership() {
           </div>
           <div className="membership-deck">
             {[
-              { tier: 'Foundation', name: 'Explorer', price: 'Free', period: 'forever · always free', desc: 'Start with open access to community, resources, and education.', features: ['Community Forum Access', 'Monthly Newsletter', 'Free Resource Library', 'Event Invitations', 'Basic Wellness Guides'], featured: false },
-              { tier: 'Core', name: 'Member', price: '$49', period: '/ month · cancel anytime', badge: 'Most Popular', desc: 'The full experience — practitioners, programs, and priority access.', features: ['All Explorer Benefits', 'Practitioner Directory', '4 Group Sessions / Month', '30% Workshop Discounts', 'Member Dashboard', 'Progress Tracking', 'Accountability Partner'], featured: true },
-              { tier: 'Elite', name: 'Guardian', price: '$149', period: '/ month · cancel anytime', desc: 'Unlimited access, personal coaching, and governance rights.', features: ['All Member Benefits', 'Monthly 1-on-1 Coaching', 'Priority Practitioner Access', 'Governance Voting Rights', 'Exclusive Retreats', 'Annual Strategy Session', 'Direct Trustee Access'], featured: false },
+              { tier: 'Foundation', name: 'Explorer', price: 'Free', period: 'forever · always free', desc: 'Start with open access to community, resources, and education.', features: ['Wealth Resource Library', 'Monthly Market Newsletter', 'Community Forum Access', 'Event Invitations', 'Basic Financial Guides'], featured: false },
+              { tier: 'Core', name: 'Member', price: '$49', period: '/ month · cancel anytime', badge: 'Most Popular', desc: 'Full wealth advisory access — strategy sessions, workshops, and a personal advisory relationship.', features: ['All Explorer Benefits', 'Advisory Team Access', '4 Strategy Sessions / Month', '30% Workshop Discounts', 'Wealth Dashboard', 'Portfolio Progress Tracking', 'Accountability Partner'], featured: true },
+              { tier: 'Elite', name: 'Guardian', price: '$149', period: '/ month · cancel anytime', desc: 'Unlimited access, personal coaching, and governance rights.', features: ['All Member Benefits', 'Monthly 1-on-1 Advisory Session', 'Priority Advisor Access', 'Governance Voting Rights', 'Exclusive Wealth Retreats', 'Annual Prosperity Plan Review', 'Direct Access to Leonard'], featured: false },
             ].map(p => (
               <div className={`plan-card${p.featured ? ' featured' : ''}`} key={p.name}>
                 {p.badge && <div className="plan-badge">{p.badge}</div>}
@@ -942,7 +942,7 @@ function MembershipApply() {
               <span className="label label-light">Application</span>
               <div className="divider"><div className="divider-line" /><div className="divider-dot" /></div>
               <h2>We're Honored You're Here</h2>
-              <p>Becoming a member means joining a community of people committed to growing — financially, physically, and spiritually.</p>
+              <p>Becoming a member means joining a community of people committed to building lasting, real financial prosperity — guided by proven strategy and genuine advisory support.</p>
               {[
                 { icon: <CheckCircle size={18} />, t: 'Instant Access', d: 'Community forum and resource library the same day' },
                 { icon: <Shield size={18} />, t: 'Safe & Private', d: 'Governed under our strict privacy policy' },
@@ -975,7 +975,7 @@ function MembershipApply() {
               <div className="field"><label>Primary Goal</label>
                 <select>
                   <option>Financial Freedom</option>
-                  <option>Holistic Health & Wellness</option>
+                  <option>Investment & Portfolio Growth</option>
                   <option>Community & Connection</option>
                   <option>Personal Development</option>
                   <option>All of the Above</option>
@@ -999,7 +999,7 @@ function MembershipApply() {
 function Practitioners() {
   return (
     <Layout>
-      <PageHero img={I.coaching} label="Our Practitioners" title="Verified Experts." titleEm="Genuine Care." subtitle="Every practitioner in our network is rigorously vetted, ethically committed, and passionate about your transformation." />
+      <PageHero img={I.coaching} label="Our Advisory Team" title="Expert Advisors." titleEm="Real Results." subtitle="Every advisor on the An Infinite Abundance team is credentialed, ethically committed, and personally invested in your financial success." />
       <section className="section section-ivory">
         <div className="container">
           <div className="section-head centered">
@@ -1009,10 +1009,10 @@ function Practitioners() {
           </div>
           <div className="team-grid">
             {[
-              { img: I.p1, name: 'Dr. Amelia Foster', role: 'Holistic Health Coach', bio: 'Board-certified integrative physician specializing in mind-body wellness and chronic stress reversal protocols.' },
+              { img: I.p1, name: 'Amelia Foster, CFP', role: 'Senior Wealth Strategist', bio: 'Certified Financial Planner with 18 years delivering comprehensive wealth strategy for high-net-worth individuals and multi-generational families.' },
               { img: I.p2, name: 'James Okafor, CFP', role: 'Wealth Strategist', bio: '15 years guiding families from debt to multi-generational wealth through disciplined, personalized strategy.' },
-              { img: I.p3, name: 'Dr. Priya Sharma', role: 'Clinical Psychologist', bio: 'Trauma-informed therapist integrating CBT, mindfulness, and positive psychology for lasting emotional resilience.' },
-              { img: I.p4, name: 'Michael Torres', role: 'Life & Business Coach', bio: 'ICF-certified executive coach helping high-achievers align career with their deepest personal values.' },
+              { img: I.p3, name: 'Rachel Morrison, CFA', role: 'Investment Analyst', bio: 'Chartered Financial Analyst specializing in equity research, portfolio optimization, and alternative asset strategies for growth-focused clients.' },
+              { img: I.p4, name: 'Michael Torres, CFP', role: 'Retirement & Tax Strategist', bio: 'Certified Financial Planner with deep expertise in tax-advantaged retirement vehicles, estate planning, and IRS-compliant asset transfer strategies.' },
             ].map(p => (
               <div className="team-card" key={p.name}>
                 <div className="team-card-img-wrap">
@@ -1035,10 +1035,10 @@ function Practitioners() {
           <span className="label label-light">For Practitioners</span>
           <div className="divider center" style={{ marginTop: 12 }}><div className="divider-line" /><div className="divider-dot" /><div className="divider-line" /></div>
           <h2 style={{ color: 'white', marginBottom: 16 }}>Join Our Practitioner Network</h2>
-          <p style={{ color: 'rgba(255,255,255,0.55)', maxWidth: 560, margin: '0 auto 40px' }}>We're always looking for aligned, ethical, highly skilled practitioners who want to make a meaningful difference in people's lives.</p>
+          <p style={{ color: 'rgba(255,255,255,0.55)', maxWidth: 560, margin: '0 auto 40px' }}>We're always looking for credentialed, ethical financial advisors, planners, and investment professionals who want to serve communities that too often lack access to professional wealth guidance.</p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <Link to="/practitioners/apply" className="btn btn-gold btn-lg">Apply as a Practitioner <ArrowRight size={16} /></Link>
-            <Link to="/practitioners/standards" className="btn btn-ghost btn-lg">View Our Standards</Link>
+            <Link to="/practitioners/apply" className="btn btn-gold btn-lg">Apply as an Advisor <ArrowRight size={16} /></Link>
+            <Link to="/practitioners/standards" className="btn btn-ghost btn-lg">View Advisor Standards</Link>
           </div>
         </div>
       </section>
@@ -1052,14 +1052,14 @@ function Practitioners() {
 function Programs() {
   return (
     <Layout>
-      <PageHero img={I.prog1} label="Programs & Events" title="Experiences That" titleEm="Change Everything." subtitle="Immersive programs, live events, and structured learning tracks designed to accelerate your growth at every level." />
+      <PageHero img={I.prog1} label="Programs & Events" title="Experiences That" titleEm="Change Everything." subtitle="Immersive wealth programs, live advisory events, and structured financial learning tracks — designed to accelerate your financial growth at every level." />
       <section className="section">
         <div className="container">
           {[
-            { img: I.prog1, tag: 'Annual Event', title: 'Wealth & Wellness Summit 2025', desc: 'Three days of transformational keynotes, workshops, networking, and community. The premier annual gathering for Infinite Wealth members and the broader wellness community.', date: 'Oct 14–16, 2025', dur: '3 Days', spots: '200 spots remaining' },
-            { img: I.prog2, tag: 'Ongoing Program', title: 'The 90-Day Wealth Builder Track', desc: 'A structured, practitioner-guided 90-day program taking you from financial confusion to clear strategy. Weekly live sessions, daily exercises, and a personal accountability partner throughout.', date: 'Starts monthly', dur: '90 Days', spots: 'Open enrollment' },
-            { img: I.prog3, tag: 'Workshop Series', title: 'Holistic Health Immersion', desc: 'A 6-week deep dive into integrative health covering nutrition, movement, sleep, stress management, and mental resilience — guided by certified health practitioners.', date: 'Rolling start', dur: '6 Weeks', spots: '24 per cohort' },
-            { img: I.prog4, tag: 'Learning Track', title: 'Inner Peace & Happiness Foundations', desc: 'Evidence-based curriculum drawing from positive psychology, mindfulness, and contemplative traditions to build a lasting foundation of genuine, durable happiness.', date: 'Self-paced', dur: '8 Modules', spots: 'Unlimited' },
+            { img: I.prog1, tag: 'Annual Event', title: 'An Infinite Abundance Wealth Summit 2026', desc: 'Three powerful days of wealth strategy sessions, investment workshops, financial networking, and advisory access. The flagship annual gathering for members — Hartford, CT.', date: 'Oct 12–14, 2026', dur: '3 Days', spots: '200 spots remaining' },
+            { img: I.prog2, tag: 'Ongoing Program', title: 'The 90-Day Wealth Builder Track', desc: 'Leonard\'s signature 90-day program — taking you from financial confusion to a clear, executable wealth strategy. Weekly advisor-led sessions, daily action steps, and a personal accountability partner.', date: 'Starts monthly', dur: '90 Days', spots: 'Open enrollment' },
+            { img: I.prog3, tag: 'Workshop Series', title: 'Financial Foundations Intensive', desc: 'A 6-week live workshop series covering budgeting, debt elimination, investment basics, tax strategy, and building your first wealth plan — led by Leonard and the advisory team.', date: 'Rolling start', dur: '6 Weeks', spots: '24 per cohort' },
+            { img: I.prog4, tag: 'Learning Track', title: 'Financial Well-being & Life Prosperity', desc: 'A self-paced learning track exploring the proven connection between financial security and overall life satisfaction — with practical tools to build both simultaneously.', date: 'Self-paced', dur: '8 Modules', spots: 'Unlimited' },
           ].map(p => (
             <Link to="/programs/detail" className="program-row" key={p.title}>
               <img src={p.img} alt={p.title} className="program-row-img" />
@@ -1087,17 +1087,17 @@ function Programs() {
 function Resources() {
   return (
     <Layout>
-      <PageHero img={I.education} label="Resources" title="Knowledge Is" titleEm="the Foundation." subtitle="Articles, guides, media, and tools to deepen your understanding and accelerate your transformation." />
+      <PageHero img={I.education} label="Resources" title="Knowledge Is" titleEm="the Foundation." subtitle="Articles, guides, and tools to deepen your financial knowledge — from investment fundamentals to advanced wealth strategy." />
       <section className="section">
         <div className="container">
           <div className="article-grid">
             {[
               { img: I.res1, tag: 'Wealth', title: '7 Wealth-Building Habits That Will Transform Your Financial Future', desc: 'Practical, proven strategies from certified financial planners designed for real people with real budgets.', time: '8 min read' },
-              { img: I.res2, tag: 'Wellness', title: 'The Mind-Body Connection: Science-Backed Practices for Lasting Health', desc: 'How integrating physical and mental wellness creates a compounding effect on your overall well-being.', time: '6 min read' },
-              { img: I.res3, tag: 'Community', title: 'Building Authentic Connection in a Disconnected World', desc: 'Why community is the missing ingredient in most wellness journeys — and how to find yours.', time: '5 min read' },
-              { img: I.about2, tag: 'Coaching', title: 'Finding the Right Coach: A Complete Guide for First-Timers', desc: 'What to look for, what to avoid, and how to get maximum value from a coaching relationship.', time: '10 min read' },
+              { img: I.res2, tag: 'Investing', title: 'The Compounding Effect: Why Starting Now Is Your Most Powerful Move', desc: 'How time in the market — not timing the market — creates the compounding wealth effect that separates the prosperous from everyone else.', time: '6 min read' },
+              { img: I.res3, tag: 'Protection', title: 'Asset Protection 101: Shielding Your Wealth from Risk', desc: 'Legal structures, insurance strategies, and planning tools that protect what you build from lawsuits, creditors, and unexpected events.', time: '5 min read' },
+              { img: I.about2, tag: 'Advisory', title: 'Do You Need a Financial Advisor? An Honest Guide', desc: 'What to look for, what red flags to avoid, and how to structure an advisory relationship that genuinely works in your favor.', time: '10 min read' },
               { img: I.prog3, tag: 'Education', title: 'Financial Literacy at Every Age: Where to Start', desc: 'A life-stage guide to the financial concepts and skills that matter most at every decade of life.', time: '7 min read' },
-              { img: I.prog4, tag: 'Happiness', title: 'The Science of Happiness: What Research Actually Shows', desc: 'Separating myth from evidence — the habits, practices, and mindsets that genuinely increase joy.', time: '9 min read' },
+              { img: I.prog4, tag: 'Well-being', title: 'Financial Well-being: How Money Peace Creates Life Peace', desc: 'The research-backed connection between financial security and overall life satisfaction — and the practical steps to get there.', time: '9 min read' },
             ].map(a => (
               <Link to="/resources/article" className="article-card" key={a.title}>
                 <div className="article-img-wrap">
@@ -1168,7 +1168,7 @@ function Donate() {
   const [amt, setAmt] = useState('$50');
   return (
     <Layout>
-      <PageHero img={I.trust} label="Stewardship & Giving" title="Give the Gift of" titleEm="Infinite Well-being." subtitle="Your generosity directly funds scholarships, community programs, and outreach extending our mission to those who need it most." />
+      <PageHero img={I.trust} label="Stewardship & Giving" title="Invest in Community" titleEm="Financial Prosperity." subtitle="Your contribution directly funds financial literacy scholarships, free community wealth workshops, and outreach bringing professional wealth guidance to underserved Hartford communities." />
       <section className="section">
         <div className="container">
           <div className="contact-wrap" style={{ gridTemplateColumns: '1fr 1.4fr' }}>
@@ -1178,10 +1178,10 @@ function Donate() {
               <h2>Where Your Gift Goes</h2>
               <div className="feature-list">
                 {[
-                  { icon: <Award size={18} />, t: 'Scholarships', d: '$25 provides one month of Explorer membership to someone who cannot afford it.' },
-                  { icon: <Users size={18} />, t: 'Community Outreach', d: '$50 sponsors a community workshop reaching up to 30 participants.' },
-                  { icon: <BookOpen size={18} />, t: 'Resource Development', d: '$100 funds the creation of a new educational guide or wellness resource.' },
-                  { icon: <Globe size={18} />, t: 'Global Mission', d: '$250 supports a full month of international community expansion programs.' },
+                  { icon: <Award size={18} />, t: 'Financial Scholarships', d: '$25 provides one month of full membership to a Hartford community member who cannot afford it.' },
+                  { icon: <Users size={18} />, t: 'Free Wealth Workshops', d: '$50 sponsors a free community financial literacy workshop reaching up to 30 local residents.' },
+                  { icon: <BookOpen size={18} />, t: 'Educational Resources', d: '$100 funds the creation of a new financial guide or investment literacy resource.' },
+                  { icon: <Globe size={18} />, t: 'National Expansion', d: '$250 supports a full month of community wealth programs reaching beyond Hartford.' },
                 ].map(i => (
                   <div className="feature-item" key={i.t}>
                     <div className="feature-icon">{i.icon}</div>
@@ -1327,4 +1327,5 @@ function App() {
 }
 
 createRoot(document.getElementById('root')).render(<App />);
+
 
