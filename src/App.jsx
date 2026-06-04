@@ -6,7 +6,7 @@ import {
   ArrowRight, CheckCircle, ChevronRight, ChevronDown, Mail, Phone,
   MapPin, Clock, Leaf, Feather, Wind, Flame, Gift, Lock, Search,
   BarChart2, Briefcase, FileText, Layers, Activity, Sun, DollarSign,
-  Home, AlertCircle, Zap, Target, PieChart, UserCheck
+  Home as HomeIcon, AlertCircle, Zap, Target, PieChart, UserCheck
 } from 'lucide-react';
 import './styles.css';
 
@@ -329,7 +329,7 @@ function PageHero({ img, label, title, titleEm, sub, am = false, breadcrumb = []
         {/* Breadcrumb */}
         {breadcrumb.length > 0 && (
           <div className="breadcrumb">
-            <Link to="/" className="bc-link"><Home size={11}/> Home</Link>
+            <Link to="/" className="bc-link"><HomeIcon size={11}/> Home</Link>
             {breadcrumb.map((b,i) => (
               <React.Fragment key={b.label}>
                 <span className="bc-sep"><ChevronRight size={11}/></span>
