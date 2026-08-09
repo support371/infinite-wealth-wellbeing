@@ -1,4 +1,5 @@
 import { applySecurityHeaders } from '../server/http.js';
+import { emailDeliveryConfigured } from '../server/email-adapter.js';
 
 export default function handler(req, res) {
   applySecurityHeaders(req, res);
@@ -15,14 +16,12 @@ export default function handler(req, res) {
     publicOriginConfigured: Boolean(process.env.PUBLIC_APP_ORIGIN),
     persistenceUrlConfigured: Boolean(process.env.IWW_SUPABASE_URL),
     persistenceServiceRoleConfigured: Boolean(process.env.IWW_SUPABASE_SERVICE_ROLE_KEY),
+    notificationWorkerSecretConfigured: Boolean(process.env.IWW_NOTIFICATION_WORKER_SECRET),
+    emailDeliveryConfigured: emailDeliveryConfigured(),
+    emailWorkerSecretConfigured: Boolean(process.env.IWW_EMAIL_WORKER_SECRET),
   };
 
-  const ready = checks.inquiryWorkflowConfigured
-    && checks.membershipWorkflowConfigured
-    && checks.workflowSigningConfigured
-    && checks.publicOriginConfigured
-    && checks.persistenceUrlConfigured
-    && checks.persistenceServiceRoleConfigured;
+  const ready = Object.values(checks).every(Boolean);
 
   return res.status(ready ? 200 : 503).json({
     status: ready ? 'ready' : 'degraded',
