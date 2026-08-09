@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   CONTACT_SUBJECTS,
@@ -15,12 +15,23 @@ function createIdempotencyKey(flow) {
   return `${flow}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-async function submitJson(endpoint, payload, flow) {
+function idempotencyForAttempt(attemptRef, flow, payload) {
+  const fingerprint = JSON.stringify(payload);
+  if (!attemptRef.current || attemptRef.current.fingerprint !== fingerprint) {
+    attemptRef.current = {
+      fingerprint,
+      key: createIdempotencyKey(flow),
+    };
+  }
+  return attemptRef.current.key;
+}
+
+async function submitJson(endpoint, payload, idempotencyKey) {
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Idempotency-Key': createIdempotencyKey(flow),
+      'Idempotency-Key': idempotencyKey,
     },
     body: JSON.stringify(payload),
   });
@@ -75,6 +86,7 @@ function Shell({ eyebrow, title, intro, children }) {
 function ContactForm() {
   const [status, setStatus] = useState({ type: 'idle', message: '', reference: '' });
   const [errors, setErrors] = useState({});
+  const attemptRef = useRef(null);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -90,13 +102,18 @@ function ContactForm() {
       consent: form.get('consent') === 'yes',
       companyWebsite: form.get('companyWebsite'),
     };
+    const idempotencyKey = idempotencyForAttempt(attemptRef, 'inquiry', payload);
 
     try {
-      const result = await submitJson('/api/inquiries', payload, 'inquiry');
+      const result = await submitJson('/api/inquiries', payload, idempotencyKey);
       event.currentTarget.reset();
+      attemptRef.current = null;
+      const deliveryNote = result.staffNotification === 'degraded'
+        ? ' It is safely recorded; staff notification is currently delayed.'
+        : '';
       setStatus({
         type: 'success',
-        message: `Your message was accepted. Reference: ${result.reference || 'recorded'}.`,
+        message: `Your message was accepted. Reference: ${result.reference || 'recorded'}.${deliveryNote}`,
         reference: result.reference || '',
       });
     } catch (error) {
@@ -141,6 +158,7 @@ function ContactForm() {
 function MembershipForm() {
   const [status, setStatus] = useState({ type: 'idle', message: '', reference: '' });
   const [errors, setErrors] = useState({});
+  const attemptRef = useRef(null);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -157,13 +175,18 @@ function MembershipForm() {
       consent: form.get('consent') === 'yes',
       companyWebsite: form.get('companyWebsite'),
     };
+    const idempotencyKey = idempotencyForAttempt(attemptRef, 'membership', payload);
 
     try {
-      const result = await submitJson('/api/membership-applications', payload, 'membership');
+      const result = await submitJson('/api/membership-applications', payload, idempotencyKey);
       event.currentTarget.reset();
+      attemptRef.current = null;
+      const deliveryNote = result.staffNotification === 'degraded'
+        ? ' It is safely recorded; staff notification is currently delayed.'
+        : '';
       setStatus({
         type: 'success',
-        message: `Your application was accepted. Reference: ${result.reference || 'recorded'}. No paid membership is activated by this form.`,
+        message: `Your application was accepted. Reference: ${result.reference || 'recorded'}. No paid membership is activated by this form.${deliveryNote}`,
         reference: result.reference || '',
       });
     } catch (error) {
