@@ -1,4 +1,4 @@
-import { applySecurityHeaders } from './_lib/http.js';
+import { applySecurityHeaders } from '../server/http.js';
 
 export default function handler(req, res) {
   applySecurityHeaders(req, res);
