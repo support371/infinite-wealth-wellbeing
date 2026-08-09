@@ -12,6 +12,7 @@ import {
   requirePost,
 } from './_lib/http.js';
 import {
+  hasSuccessfulNotification,
   persistMembershipApplication,
   readIdempotencyKey,
   recordNotificationDelivery,
@@ -82,6 +83,19 @@ export default async function handler(req, res) {
     return res.status(502).json({
       error: 'persistence_invalid_response',
       message: 'The application store returned an invalid acknowledgement.',
+    });
+  }
+
+  const previousDelivery = await hasSuccessfulNotification({
+    submissionKind: 'membership_application',
+    submissionId: stored.submissionId,
+  });
+
+  if (previousDelivery.ok && previousDelivery.sent) {
+    return res.status(202).json({
+      status: 'accepted',
+      reference: stored.reference,
+      staffNotification: 'already-sent',
     });
   }
 
