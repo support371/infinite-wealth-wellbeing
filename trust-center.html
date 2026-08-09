@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Operational trust and launch-readiness status for Infinite Wealth & Well-being." />
+    <title>Trust Center | Infinite Wealth & Well-being</title>
+    <link rel="stylesheet" href="/src/production/status.css" />
+  </head>
+  <body>
+    <main class="status-shell">
+      <a class="status-brand" href="/">
+        <span class="status-mark">IW</span>
+        <span><strong>Infinite Wealth</strong><small>&amp; Well-being</small></span>
+      </a>
+
+      <section class="status-hero">
+        <span class="status-eyebrow">Trust center</span>
+        <h1>Show what is real. Mark what is still blocked.</h1>
+        <p>This page reports the platform's current operational controls. It does not present unpublished charters, policies, credentials, certifications, or service guarantees as though they have already been verified.</p>
+      </section>
+
+      <section class="status-grid">
+        <article class="status-card status-good">
+          <h2>Implemented controls</h2>
+          <ul>
+            <li>Public inquiry and membership endpoints validate input and fail closed when staff workflows are not configured.</li>
+            <li>Workflow forwarding requires a signing secret.</li>
+            <li>Browser submissions are restricted to the configured public origin.</li>
+            <li>Submission endpoints use no-store responses and defensive browser headers.</li>
+            <li>Public forms use a honeypot field and explicitly warn against submitting highly sensitive data.</li>
+            <li>Payment-card collection remains disabled.</li>
+          </ul>
+        </article>
+
+        <article class="status-card status-blocked">
+          <h2>Not yet represented as complete</h2>
+          <ul>
+            <li>Privacy Policy and formal data-retention schedule.</li>
+            <li>Terms of Use and Membership Agreement.</li>
+            <li>Refund/Cancellation Policy.</li>
+            <li>Medical/well-being and financial-information disclaimers.</li>
+            <li>Credential, testimonial, impact-metric, ministry/tax, fiduciary, and service-claim verification.</li>
+            <li>Authenticated database, administrative review portal, and durable audit records.</li>
+          </ul>
+        </article>
+      </section>
+
+      <div class="status-banner"><strong>Release rule:</strong> a missing control stays visible as missing. The production branch does not convert an intended policy or credential into a completed claim simply because the website has a place to display it.</div>
+
+      <div class="status-actions">
+        <a class="status-button" href="/contact">Ask a trust or policy question</a>
+        <a class="status-button secondary" href="/">Return to the main site</a>
+      </div>
+
+      <p class="status-foot">This status page is part of the production-completion branch and is intended to keep public claims aligned with verifiable implementation evidence.</p>
+    </main>
+  </body>
+</html>
