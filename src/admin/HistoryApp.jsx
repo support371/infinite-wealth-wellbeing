@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
+import StaffMfaGate from './StaffMfaGate.jsx';
 import './admin.css';
 
 const supabaseUrl = import.meta.env.VITE_IWW_SUPABASE_URL;
@@ -29,6 +30,7 @@ async function historyRequest(session, kind, submissionId) {
   if (!response.ok) {
     const error = new Error(data.error || 'history_request_failed');
     error.status = response.status;
+    error.code = data.error || 'history_request_failed';
     throw error;
   }
   return data;
@@ -69,7 +71,7 @@ function SignIn({ onSignedIn }) {
             {error && <div className="admin-alert admin-alert-error" role="alert">{error}</div>}
           </form>
         )}
-        <p className="admin-login-note">A valid Auth account must also hold an active reviewer/admin role. Audit tables are never queried directly from the browser.</p>
+        <p className="admin-login-note">A valid Auth account must complete MFA and hold an active reviewer/admin role. Audit tables are never queried directly from the browser.</p>
         <a href="/admin">Back to review queue</a>
       </section>
     </main>
@@ -148,6 +150,8 @@ function HistoryConsole({ session, onSignOut }) {
       if (requestError.status === 401) {
         await supabase?.auth.signOut();
         onSignOut();
+      } else if (requestError.code === 'mfa_required') {
+        setError('This session must complete MFA before audit evidence can be accessed.');
       } else if (requestError.status === 403) {
         setError('This Auth account does not have an active reviewer/admin role.');
       } else if (requestError.status === 400) {
@@ -233,7 +237,11 @@ function App() {
 
   if (!ready) return <main className="admin-login-shell"><div className="admin-empty">Checking staff session…</div></main>;
   if (!session) return <SignIn onSignedIn={setSession} />;
-  return <HistoryConsole session={session} onSignOut={() => setSession(null)} />;
+  return (
+    <StaffMfaGate supabase={supabase} session={session} onSession={setSession}>
+      <HistoryConsole session={session} onSignOut={() => setSession(null)} />
+    </StaffMfaGate>
+  );
 }
 
 createRoot(document.getElementById('root')).render(<App/>);
