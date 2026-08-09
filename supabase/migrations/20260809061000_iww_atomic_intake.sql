@@ -23,7 +23,7 @@ declare
   v_submission_id uuid;
   v_reference text;
   v_response jsonb;
-  v_claimed boolean := false;
+  v_claimed_rows integer := 0;
 begin
   if char_length(p_idempotency_key) < 8 or char_length(p_idempotency_key) > 200 then
     raise exception 'invalid_idempotency_key';
@@ -42,9 +42,9 @@ begin
   )
   on conflict (idempotency_key) do nothing;
 
-  get diagnostics v_claimed = row_count;
+  get diagnostics v_claimed_rows = row_count;
 
-  if not v_claimed then
+  if v_claimed_rows = 0 then
     select *
       into v_existing
       from public.iww_idempotency_records
@@ -167,7 +167,7 @@ declare
   v_submission_id uuid;
   v_reference text;
   v_response jsonb;
-  v_claimed boolean := false;
+  v_claimed_rows integer := 0;
 begin
   if char_length(p_idempotency_key) < 8 or char_length(p_idempotency_key) > 200 then
     raise exception 'invalid_idempotency_key';
@@ -186,9 +186,9 @@ begin
   )
   on conflict (idempotency_key) do nothing;
 
-  get diagnostics v_claimed = row_count;
+  get diagnostics v_claimed_rows = row_count;
 
-  if not v_claimed then
+  if v_claimed_rows = 0 then
     select *
       into v_existing
       from public.iww_idempotency_records
