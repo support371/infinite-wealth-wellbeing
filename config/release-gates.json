@@ -59,11 +59,11 @@
     },
     {
       "id": "admin_review",
-      "title": "Authenticated administrative review queue and audit history",
+      "title": "Authenticated administrative review queue, rationale guard, and audit history",
       "status": "prepared",
       "requiredForLaunch": true,
-      "evidence": ["api/admin/submissions.js", "api/admin/history.js", "src/admin/AdminApp.jsx", "src/admin/HistoryApp.jsx", "admin.html", "admin-history.html", "supabase/migrations/20260809062000_iww_staff_review.sql", "api/admin.test.js", "api/release-config.test.js"],
-      "blocker": "Requires the approved IWW Auth/database project, browser-safe publishable configuration, staff Auth users, role assignment, and live queue/history verification."
+      "evidence": ["api/admin/submissions.js", "api/admin/history.js", "src/admin/AdminApp.jsx", "src/admin/HistoryApp.jsx", "admin.html", "admin-history.html", "supabase/migrations/20260809062000_iww_staff_review.sql", "supabase/migrations/20260809071000_iww_terminal_review_reason_guard.sql", "api/admin.test.js", "api/review-reason-guard.test.js", "api/release-config.test.js"],
+      "blocker": "Requires the approved IWW Auth/database project, browser-safe publishable configuration, staff Auth users, role assignment, and live queue/history/rationale verification."
     },
     {
       "id": "staff_role_governance",
@@ -75,11 +75,11 @@
     },
     {
       "id": "operational_readiness",
-      "title": "Protected deep operational readiness probe",
+      "title": "Protected deep operational readiness and aggregate queue health",
       "status": "prepared",
       "requiredForLaunch": true,
-      "evidence": ["api/internal/readiness.js", "api/readiness.test.js", "ops/PRODUCTION_ENVIRONMENT.md"],
-      "blocker": "The probe cannot return live ready until the dedicated database schema, workflow secrets, origin, both worker secrets, email adapter signing configuration, and both durable outbox tables are activated."
+      "evidence": ["api/internal/readiness.js", "api/readiness.test.js", "supabase/migrations/20260809070000_iww_operational_snapshot.sql", "api/operational-snapshot.test.js", "ops/PRODUCTION_ENVIRONMENT.md"],
+      "blocker": "The probe and non-PII snapshot are prepared, but live readiness cannot clear until the dedicated schema, workflow/email secrets, workers, adapters, and queue health are verified in the activated environment."
     },
     {
       "id": "abuse_protection",
@@ -88,6 +88,14 @@
       "requiredForLaunch": true,
       "evidence": ["api/inquiries.js", "api/membership-applications.js", "supabase/migrations/20260809068000_iww_intake_throttle.sql", "api/intake-throttle.test.js"],
       "blocker": "Application/database controls are prepared; production edge/WAF rate limiting and live abuse testing remain provider configuration work."
+    },
+    {
+      "id": "incident_response",
+      "title": "Evidence-preserving incident response and recovery procedure",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["ops/INCIDENT_RESPONSE_RUNBOOK.md", "api/incident-response-contract.test.js", "SECURITY_THREAT_MODEL.md", "ops/PRODUCTION_ACTIVATION_RUNBOOK.md"],
+      "blocker": "Technical containment/recovery procedures are prepared; a non-production incident-response drill, named operational ownership, provider-specific escalation contacts, and applicable legal/privacy review path remain required."
     },
     {
       "id": "legal_policy",
@@ -143,7 +151,7 @@
       "status": "in_progress",
       "requiredForLaunch": true,
       "evidence": ["api/*.test.js", "SECURITY_THREAT_MODEL.md"],
-      "blocker": "Automated contract coverage exists; live end-to-end, assistive-technology, mobile, performance, and production security verification require activated provider environments."
+      "blocker": "Automated contract coverage exists; live end-to-end, assistive-technology, mobile, performance, incident, and production security verification require activated provider environments."
     }
   ]
 }
