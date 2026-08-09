@@ -1,0 +1,30 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color:#1c241f;
+  background:#f4f0e7;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:#f4f0e7; }
+a { color:#315b43; }
+.status-shell { max-width:1000px; margin:0 auto; padding:34px 22px 76px; }
+.status-brand { display:inline-flex; align-items:center; gap:10px; color:#1c241f; text-decoration:none; margin-bottom:55px; }
+.status-mark { width:42px; height:42px; display:grid; place-items:center; border:1px solid #9b7c3b; border-radius:50%; color:#7b5c21; font-family:Georgia,serif; font-weight:700; }
+.status-brand span:last-child { display:grid; line-height:1.05; }
+.status-brand strong { font-family:Georgia,serif; }
+.status-brand small { color:#657169; text-transform:uppercase; letter-spacing:.12em; font-size:.7rem; margin-top:4px; }
+.status-eyebrow { color:#725c2d; text-transform:uppercase; letter-spacing:.14em; font-weight:850; font-size:.72rem; }
+.status-hero h1 { max-width:850px; margin:13px 0 16px; font-family:Georgia,serif; font-size:clamp(2.7rem,7vw,6.2rem); line-height:.96; font-weight:500; letter-spacing:-.045em; }
+.status-hero > p { max-width:760px; color:#58655d; line-height:1.75; font-size:1.05rem; }
+.status-banner { margin:28px 0; padding:16px 18px; border-left:4px solid #875f27; background:#fff8e9; line-height:1.6; }
+.status-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:32px; }
+.status-card { background:#fffdf8; border:1px solid #d8d1c2; border-radius:16px; padding:19px; }
+.status-card h2, .status-card h3 { margin:0 0 9px; font-family:Georgia,serif; font-weight:500; }
+.status-card p, .status-card li { color:#5d6861; line-height:1.6; }
+.status-card ul { margin:10px 0 0; padding-left:20px; }
+.status-good { border-top:4px solid #416d50; }
+.status-blocked { border-top:4px solid #a87631; }
+.status-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:30px; }
+.status-button { display:inline-flex; align-items:center; justify-content:center; padding:11px 15px; border-radius:10px; background:#274c37; color:#fff; text-decoration:none; font-weight:800; }
+.status-button.secondary { background:#fffdf8; color:#315b43; border:1px solid #cfc8ba; }
+.status-foot { margin-top:42px; padding-top:20px; border-top:1px solid #d6d0c4; color:#707b74; font-size:.85rem; line-height:1.6; }
+@media (max-width:700px){ .status-grid{grid-template-columns:1fr}.status-shell{padding:24px 16px 55px}.status-brand{margin-bottom:38px} }
