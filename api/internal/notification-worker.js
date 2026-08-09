@@ -66,10 +66,7 @@ function payloadFor(kind, row) {
       requestedTier: row.requested_tier,
       primaryInterest: row.primary_interest,
       introduction: row.introduction,
-      consent: {
-        applicationProcessing: true,
-        contactPermission: true,
-      },
+      consent: { applicationProcessing: true, contactPermission: true },
       metadata,
     };
   }
@@ -81,10 +78,7 @@ function payloadFor(kind, row) {
     person,
     subject: row.subject,
     message: row.message,
-    consent: {
-      submissionProcessing: true,
-      contactPermission: true,
-    },
+    consent: { submissionProcessing: true, contactPermission: true },
     metadata,
   };
 }
@@ -92,11 +86,7 @@ function payloadFor(kind, row) {
 async function finishAttempt(outboxId, delivered, error = null) {
   return supabaseServiceRequest('/rest/v1/rpc/iww_finish_notification_attempt', {
     method: 'POST',
-    body: {
-      p_outbox_id: outboxId,
-      p_delivered: delivered,
-      p_error: error,
-    },
+    body: { p_outbox_id: outboxId, p_delivered: delivered, p_error: error },
   });
 }
 
@@ -129,6 +119,7 @@ async function processItem(item) {
     submissionKind: item.submission_kind,
     submissionId: item.submission_id,
     delivered,
+    attempt: item.attempt_count,
   });
   await finishAttempt(item.outbox_id, delivered.ok, delivered.ok ? null : delivered.error);
 
@@ -156,15 +147,11 @@ export default async function handler(req, res) {
     method: 'POST',
     body: { p_limit: 25 },
   });
-  if (!claimed.ok) {
-    return res.status(claimed.status || 502).json({ error: 'outbox_claim_failed' });
-  }
+  if (!claimed.ok) return res.status(claimed.status || 502).json({ error: 'outbox_claim_failed' });
 
   const items = Array.isArray(claimed.data) ? claimed.data : [];
   const results = [];
-  for (const item of items) {
-    results.push(await processItem(item));
-  }
+  for (const item of items) results.push(await processItem(item));
 
   return res.status(200).json({
     status: 'processed',
