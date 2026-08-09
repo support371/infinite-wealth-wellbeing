@@ -62,7 +62,6 @@ export default async function handler(req, res) {
     consent: {
       applicationProcessing: true,
       contactPermission: true,
-      privacyNoticeAccepted: true,
     },
     metadata: requestMetadata(req),
   };
