@@ -4,6 +4,14 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/contact",
+      "destination": "/contact.html"
+    },
+    {
+      "source": "/membership/apply",
+      "destination": "/membership-apply.html"
+    },
+    {
       "source": "/((?!api|_next|.*\\..*).*)",
       "destination": "/index.html"
     }
