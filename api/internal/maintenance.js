@@ -1,6 +1,6 @@
-import { applySecurityHeaders } from '../_lib/http.js';
-import { internalBearerMatches } from '../_lib/internal-auth.js';
-import { supabaseServiceRequest } from '../_lib/supabase-server.js';
+import { applySecurityHeaders } from '../../server/http.js';
+import { internalBearerMatches } from '../../server/internal-auth.js';
+import { supabaseServiceRequest } from '../../server/supabase-server.js';
 
 export default async function handler(req, res) {
   applySecurityHeaders(req, res);
