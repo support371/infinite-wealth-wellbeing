@@ -12,6 +12,18 @@
       "destination": "/membership-apply.html"
     },
     {
+      "source": "/donate",
+      "destination": "/donate.html"
+    },
+    {
+      "source": "/trust-center",
+      "destination": "/trust-center.html"
+    },
+    {
+      "source": "/trust-center/:path*",
+      "destination": "/trust-center.html"
+    },
+    {
       "source": "/((?!api|_next|.*\\..*).*)",
       "destination": "/index.html"
     }
