@@ -7,7 +7,7 @@ import {
   persistMembershipApplication,
   readIdempotencyKey,
   recordNotificationDelivery,
-} from './_lib/persistence.js';
+} from '../server/persistence.js';
 
 const ORIGINAL_FETCH = global.fetch;
 const ENV_KEYS = ['IWW_SUPABASE_URL', 'IWW_SUPABASE_SERVICE_ROLE_KEY'];
