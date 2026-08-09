@@ -1,6 +1,6 @@
-import { applySecurityHeaders } from '../_lib/http.js';
-import { internalBearerMatches } from '../_lib/internal-auth.js';
-import { getSupabaseServerConfig, supabaseServiceRequest } from '../_lib/supabase-server.js';
+import { applySecurityHeaders } from '../../server/http.js';
+import { internalBearerMatches } from '../../server/internal-auth.js';
+import { getSupabaseServerConfig, supabaseServiceRequest } from '../../server/supabase-server.js';
 
 async function tableReachable(table, select) {
   const query = new URLSearchParams({ select, limit: '1' });
@@ -41,6 +41,7 @@ export default async function handler(req, res) {
         roles: await tableReachable('iww_user_roles', 'user_id'),
         auditEvents: await tableReachable('iww_audit_events', 'id'),
         notificationOutbox: await tableReachable('iww_notification_outbox', 'id'),
+        emailOutbox: await tableReachable('iww_email_outbox', 'id'),
       }
     : {
         inquiries: { ok: false, status: null, error: 'persistence_not_configured' },
@@ -48,6 +49,7 @@ export default async function handler(req, res) {
         roles: { ok: false, status: null, error: 'persistence_not_configured' },
         auditEvents: { ok: false, status: null, error: 'persistence_not_configured' },
         notificationOutbox: { ok: false, status: null, error: 'persistence_not_configured' },
+        emailOutbox: { ok: false, status: null, error: 'persistence_not_configured' },
       };
 
   const configReady = Object.values(configChecks).every(Boolean);
