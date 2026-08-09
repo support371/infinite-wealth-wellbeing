@@ -1,10 +1,14 @@
 const DEFAULT_ALLOWED_ORIGIN = 'https://infinite-wealth-wellbeing.vercel.app';
 
+function configuredOrigin() {
+  return process.env.PUBLIC_APP_ORIGIN || DEFAULT_ALLOWED_ORIGIN;
+}
+
 export function applySecurityHeaders(req, res) {
-  const configuredOrigin = process.env.PUBLIC_APP_ORIGIN || DEFAULT_ALLOWED_ORIGIN;
+  const allowedOrigin = configuredOrigin();
   const requestOrigin = req.headers.origin;
 
-  if (requestOrigin && requestOrigin === configuredOrigin) {
+  if (requestOrigin && requestOrigin === allowedOrigin) {
     res.setHeader('Access-Control-Allow-Origin', requestOrigin);
     res.setHeader('Vary', 'Origin');
   }
@@ -22,6 +26,13 @@ export function handleOptions(req, res) {
   applySecurityHeaders(req, res);
   res.status(204).end();
   return true;
+}
+
+export function requireAllowedOrigin(req, res) {
+  const requestOrigin = req.headers.origin;
+  if (!requestOrigin || requestOrigin === configuredOrigin()) return true;
+  res.status(403).json({ error: 'origin_not_allowed' });
+  return false;
 }
 
 export function requirePost(req, res) {
