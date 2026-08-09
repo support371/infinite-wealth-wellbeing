@@ -14,9 +14,12 @@ import {
   Upload,
 } from 'lucide-react';
 import {
+  activateQueueItem,
   addQueueItem,
   addToIncubator,
   archiveIncubatorItem,
+  blockedItems,
+  blockWithReason,
   canPromoteFromIncubator,
   closeDay,
   completeWithEvidence,
@@ -33,6 +36,7 @@ import {
   reviewPrinciple,
   saveState,
   setPrimaryMission,
+  unblockItem,
 } from './engine.js';
 import './operatingSystem.css';
 
@@ -46,7 +50,7 @@ function FieldMeter({ label, value, onChange, low, high }) {
   );
 }
 
-function QueueCard({ item }) {
+function QueueCard({ item, canActivate, onActivate }) {
   return (
     <div className="os-queue-card">
       <span className={`os-stage os-stage-${item.stage}`}>{item.stage}</span>
@@ -55,6 +59,9 @@ function QueueCard({ item }) {
         {item.nextAction && <p>{item.nextAction}</p>}
         {!item.nextAction && item.outcome && <p>{item.outcome}</p>}
         {item.acceptanceCriteria && <small className="os-acceptance">Done when: {item.acceptanceCriteria}</small>}
+        {item.stage !== 'now' && canActivate && (
+          <button className="os-text-button" onClick={() => onActivate(item.id)}>Make NOW</button>
+        )}
       </div>
     </div>
   );
@@ -76,6 +83,7 @@ export default function OperatingSystemPage() {
   const [ideaNote, setIdeaNote] = useState('');
   const [evidence, setEvidence] = useState('');
   const [overrideReason, setOverrideReason] = useState('');
+  const [blockReason, setBlockReason] = useState('');
   const [missionTitle, setMissionTitle] = useState(state.primaryMission.title);
   const [missionOutcome, setMissionOutcome] = useState(state.primaryMission.outcome);
   const [principleId, setPrincipleId] = useState(state.principles[0]?.id || '');
@@ -89,6 +97,7 @@ export default function OperatingSystemPage() {
 
   const command = useMemo(() => getRequiredAction(state), [state]);
   const openQueue = useMemo(() => normalizeQueue(state.queue), [state.queue]);
+  const blocked = useMemo(() => blockedItems(state.queue), [state.queue]);
   const activeItem = openQueue.find((item) => item.stage === 'now');
   const dayOpen = isDayOpen(state);
 
@@ -132,6 +141,12 @@ export default function OperatingSystemPage() {
     if (!activeItem || !overrideReason.trim()) return;
     setState((current) => deferWithOverride(current, activeItem.id, overrideReason.trim()));
     setOverrideReason('');
+  }
+
+  function blockActive() {
+    if (!activeItem || !blockReason.trim()) return;
+    setState((current) => blockWithReason(current, activeItem.id, blockReason.trim()));
+    setBlockReason('');
   }
 
   function submitMission(event) {
@@ -256,26 +271,40 @@ export default function OperatingSystemPage() {
 
       <section className="os-grid os-grid-2">
         <article className="os-panel">
-          <div className="os-panel-title"><CheckCircle size={18}/><h2>Close with evidence</h2></div>
+          <div className="os-panel-title"><CheckCircle size={18}/><h2>Resolve the active command</h2></div>
           {activeItem ? (
             <>
               <p>Do not mark <strong>{activeItem.title}</strong> complete until you can point to what became real.</p>
               {activeItem.acceptanceCriteria && <p className="os-definition"><strong>Acceptance:</strong> {activeItem.acceptanceCriteria}</p>}
               <textarea className="os-input" placeholder="Evidence: deployed URL, test result, document completed, decision recorded..." value={evidence} onChange={(e) => setEvidence(e.target.value)} />
               <button className="os-primary" onClick={finishActive} disabled={!evidence.trim()}><CheckCircle size={16}/> Complete with evidence</button>
-              <div className="os-override">
-                <input className="os-input" placeholder="To defer this command, record the reason" value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} />
-                <button className="os-secondary" onClick={overrideActive} disabled={!overrideReason.trim()}>Defer with override</button>
+
+              <div className="os-resolution-grid">
+                <div>
+                  <input className="os-input" placeholder="To defer, record the reason" value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} />
+                  <button className="os-secondary" onClick={overrideActive} disabled={!overrideReason.trim()}>Defer with override</button>
+                </div>
+                <div>
+                  <input className="os-input" placeholder="External dependency / blocking reason" value={blockReason} onChange={(e) => setBlockReason(e.target.value)} />
+                  <button className="os-secondary" onClick={blockActive} disabled={!blockReason.trim()}>Mark BLOCKED</button>
+                </div>
               </div>
-              <p className="os-muted os-small">An override moves the active item to Later, promotes the next obligation, and remains in the audit ledger.</p>
+              <p className="os-muted os-small">Defer is a deliberate choice. Blocked is reserved for a real dependency that prevents valid execution. Both are audited.</p>
             </>
-          ) : <p>Add the next required result. The system will make it the active command.</p>}
+          ) : <p>No `NOW` item is active. Activate a queued result or define the next required result.</p>}
         </article>
 
         <article className="os-panel">
           <div className="os-panel-title"><ArrowRight size={18}/><h2>Now · Next · Later</h2></div>
           <div className="os-queue">
-            {openQueue.length ? openQueue.map((item) => <QueueCard item={item} key={item.id}/>) : <p className="os-muted">No open work yet.</p>}
+            {openQueue.length ? openQueue.map((item) => (
+              <QueueCard
+                item={item}
+                key={item.id}
+                canActivate={!activeItem}
+                onActivate={(itemId) => setState((current) => activateQueueItem(current, itemId))}
+              />
+            )) : <p className="os-muted">No open work yet.</p>}
           </div>
           <form className="os-form" onSubmit={submitTask}>
             <input className="os-input" placeholder="Required result" value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} />
@@ -283,6 +312,18 @@ export default function OperatingSystemPage() {
             <input className="os-input" placeholder="Definition of done / acceptance evidence" value={taskAcceptance} onChange={(e) => setTaskAcceptance(e.target.value)} />
             <button className="os-primary" type="submit"><Plus size={16}/> Add required work</button>
           </form>
+
+          {blocked.length > 0 && (
+            <div className="os-blocked-list">
+              <strong>Blocked dependencies</strong>
+              {blocked.map((item) => (
+                <div className="os-blocked-row" key={item.id}>
+                  <div><span>{item.title}</span><small>{item.blockReason}</small></div>
+                  <button className="os-secondary" onClick={() => setState((current) => unblockItem(current, item.id))}>Unblock</button>
+                </div>
+              ))}
+            </div>
+          )}
         </article>
       </section>
 
@@ -323,9 +364,9 @@ export default function OperatingSystemPage() {
           </div>
           {state.overrides.length > 0 && (
             <div className="os-audit-list">
-              <strong>Recent overrides</strong>
+              <strong>Recent non-standard resolutions</strong>
               {state.overrides.slice(0, 5).map((entry) => (
-                <div key={entry.id}><span>{entry.title}</span><small>{entry.reason} · {formatDate(entry.createdAt)}</small></div>
+                <div key={entry.id}><span>{entry.title} · {entry.disposition}</span><small>{entry.reason} · {formatDate(entry.createdAt)}</small></div>
               ))}
             </div>
           )}
@@ -363,14 +404,14 @@ export default function OperatingSystemPage() {
             <div className="os-ledger">
               {state.dailySessions.slice(0, 7).map((session) => (
                 <div className="os-ledger-row" key={session.id}>
-                  <strong>{session.date}</strong>
+                  <strong>{session.date} · {session.status}</strong>
                   <span>{session.openingIntent || 'No opening statement recorded.'}</span>
                   {session.closingNote && <span>Close: {session.closingNote}</span>}
-                  <small>{session.openWorkAtClose?.length || 0} open items at close</small>
+                  <small>{session.openWorkAtClose?.length || 0} open · {session.blockedWorkAtClose?.length || 0} blocked at close</small>
                 </div>
               ))}
             </div>
-          ) : <p className="os-muted">Closed days will form the continuity journal here.</p>}
+          ) : <p className="os-muted">Closed or interrupted days will form the continuity journal here.</p>}
         </article>
 
         <article className="os-panel">
