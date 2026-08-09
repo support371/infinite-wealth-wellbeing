@@ -9,6 +9,7 @@ function mapRoleError(result) {
   const message = String(result?.data?.message || '');
   if (message.includes('admin_role_required')) return { status: 403, error: 'admin_role_required' };
   if (message.includes('auth_user_not_found')) return { status: 404, error: 'auth_user_not_found' };
+  if (message.includes('verified_mfa_required')) return { status: 409, error: 'verified_mfa_required' };
   if (message.includes('last_admin_required')) return { status: 409, error: 'last_admin_required' };
   if (message.includes('invalid_staff_role')) return { status: 400, error: 'invalid_staff_role' };
   return { status: result?.status || 502, error: 'staff_role_update_failed' };
