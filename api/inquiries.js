@@ -30,7 +30,6 @@ export default async function handler(req, res) {
   const body = getBody(req);
   if (!body) return res.status(400).json({ error: 'invalid_json' });
 
-  // Honeypot field: real users should leave this blank.
   if (cleanText(body.companyWebsite, 200)) {
     return res.status(202).json({ status: 'accepted' });
   }
@@ -61,8 +60,8 @@ export default async function handler(req, res) {
     subject,
     message,
     consent: {
+      submissionProcessing: true,
       contactPermission: true,
-      privacyNoticeAccepted: true,
     },
     metadata: requestMetadata(req),
   };
