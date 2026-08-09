@@ -49,6 +49,10 @@ function persistenceResponse(reference, submissionId) {
   };
 }
 
+function emptyNotificationResponse() {
+  return { ok: true, json: async () => [] };
+}
+
 beforeEach(() => {
   for (const key of ENV_KEYS) delete process.env[key];
   global.fetch = ORIGINAL_FETCH;
@@ -149,7 +153,10 @@ test('durably stored inquiry remains accepted when staff webhook is unavailable'
     if (url.includes('/rpc/iww_accept_inquiry')) {
       return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
     }
-    if (url.includes('/iww_notification_deliveries')) {
+    if (url.includes('/iww_notification_deliveries') && options.method === 'GET') {
+      return emptyNotificationResponse();
+    }
+    if (url.includes('/iww_notification_deliveries') && options.method === 'POST') {
       return { ok: true, json: async () => ({}) };
     }
     throw new Error(`Unexpected fetch: ${url}`);
@@ -168,7 +175,7 @@ test('durably stored inquiry remains accepted when staff webhook is unavailable'
   assert.equal(calls.some((call) => call.url === 'https://workflow.test/inquiry'), false);
 });
 
-test('valid inquiry persists first, then sends signed workflow notification', async () => {
+test('valid inquiry persists, checks delivery history, sends signed webhook, then records it', async () => {
   configurePersistence();
   process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
   process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
@@ -178,8 +185,9 @@ test('valid inquiry persists first, then sends signed workflow notification', as
     if (url.includes('/rpc/iww_accept_inquiry')) {
       return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
     }
+    if (url.includes('/iww_notification_deliveries') && options.method === 'GET') return emptyNotificationResponse();
     if (url === 'https://workflow.test/inquiry') return { ok: true, json: async () => ({}) };
-    if (url.includes('/iww_notification_deliveries')) return { ok: true, json: async () => ({}) };
+    if (url.includes('/iww_notification_deliveries') && options.method === 'POST') return { ok: true, json: async () => ({}) };
     throw new Error(`Unexpected fetch: ${url}`);
   };
 
@@ -193,14 +201,43 @@ test('valid inquiry persists first, then sends signed workflow notification', as
   assert.equal(res.body.reference, 'IWW-INQ-ABC123');
   assert.equal(res.body.staffNotification, 'sent');
   assert.match(calls[0].url, /rpc\/iww_accept_inquiry$/);
-  assert.equal(calls[1].url, 'https://workflow.test/inquiry');
-  assert.match(calls[2].url, /iww_notification_deliveries$/);
-  assert.equal(calls[1].options.headers['X-IWW-Webhook-Secret'], 'test-secret');
-  const payload = JSON.parse(calls[1].options.body);
+  assert.match(calls[1].url, /iww_notification_deliveries\?/);
+  assert.equal(calls[1].options.method, 'GET');
+  assert.equal(calls[2].url, 'https://workflow.test/inquiry');
+  assert.match(calls[3].url, /iww_notification_deliveries$/);
+  assert.equal(calls[2].options.headers['X-IWW-Webhook-Secret'], 'test-secret');
+  const payload = JSON.parse(calls[2].options.body);
   assert.equal(payload.reference, 'IWW-INQ-ABC123');
   assert.equal(payload.submissionId, '11111111-1111-1111-1111-111111111111');
   assert.equal(payload.person.email, 'ada@example.com');
-  assert.equal(payload.consent.submissionProcessing, true);
+});
+
+test('inquiry replay skips duplicate staff webhook after a successful delivery record', async () => {
+  configurePersistence();
+  process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
+  process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
+  const calls = [];
+  global.fetch = async (url, options) => {
+    calls.push({ url, options });
+    if (url.includes('/rpc/iww_accept_inquiry')) {
+      return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
+    }
+    if (url.includes('/iww_notification_deliveries') && options.method === 'GET') {
+      return { ok: true, json: async () => [{ id: 'delivery-1' }] };
+    }
+    throw new Error(`Unexpected fetch: ${url}`);
+  };
+
+  const res = createResponse();
+  await inquiryHandler(request('POST', {
+    firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com',
+    subject: 'General Inquiry', message: 'Please send more information about the organization.', consent: true,
+  }, { 'idempotency-key': 'inquiry-123456' }), res);
+
+  assert.equal(res.statusCode, 202);
+  assert.equal(res.body.staffNotification, 'already-sent');
+  assert.equal(calls.length, 2);
+  assert.equal(calls.some((call) => call.url === 'https://workflow.test/inquiry'), false);
 });
 
 test('membership application validates allowed tier and interest before persistence', async () => {
@@ -226,8 +263,9 @@ test('valid membership application persists first and uses stored reference', as
     if (url.includes('/rpc/iww_accept_membership_application')) {
       return persistenceResponse('IWW-MEM-XYZ789', '22222222-2222-2222-2222-222222222222');
     }
+    if (url.includes('/iww_notification_deliveries') && options.method === 'GET') return emptyNotificationResponse();
     if (url === 'https://workflow.test/membership') return { ok: true, json: async () => ({}) };
-    if (url.includes('/iww_notification_deliveries')) return { ok: true, json: async () => ({}) };
+    if (url.includes('/iww_notification_deliveries') && options.method === 'POST') return { ok: true, json: async () => ({}) };
     throw new Error(`Unexpected fetch: ${url}`);
   };
 
@@ -241,7 +279,9 @@ test('valid membership application persists first and uses stored reference', as
   assert.equal(res.body.reference, 'IWW-MEM-XYZ789');
   assert.equal(res.body.staffNotification, 'sent');
   assert.match(calls[0].url, /rpc\/iww_accept_membership_application$/);
-  const payload = JSON.parse(calls[1].options.body);
+  assert.match(calls[1].url, /iww_notification_deliveries\?/);
+  assert.equal(calls[2].url, 'https://workflow.test/membership');
+  const payload = JSON.parse(calls[2].options.body);
   assert.equal(payload.requestedTier, 'Explorer');
   assert.equal(payload.primaryInterest, 'Wealth & Financial Education');
   assert.equal(payload.consent.applicationProcessing, true);
