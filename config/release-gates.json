@@ -21,28 +21,49 @@
       "evidence": [
         "api/inquiries.js",
         "api/membership-applications.js",
-        "shared/submission-contracts.js"
+        "shared/submission-contracts.js",
+        "src/production/submission.jsx"
       ]
     },
     {
       "id": "durable_persistence_code",
-      "title": "Durable idempotent persistence code",
+      "title": "Durable idempotent persistence architecture",
       "status": "prepared",
       "requiredForLaunch": true,
       "evidence": [
         "api/_lib/persistence.js",
         "supabase/migrations/20260809060000_iww_production_core.sql",
-        "supabase/migrations/20260809061000_iww_atomic_intake.sql"
+        "supabase/migrations/20260809061000_iww_atomic_intake.sql",
+        "api/persistence.test.js",
+        "api/data-model.test.js"
       ],
-      "blocker": "Dedicated or explicitly approved IWW database has not been selected and migrations have not been applied."
+      "blocker": "Dedicated or explicitly approved IWW database has not been selected; migrations and live persistence verification are therefore not yet complete."
     },
     {
       "id": "dedicated_database",
       "title": "Dedicated production database and authentication boundary",
       "status": "blocked_external",
       "requiredForLaunch": true,
-      "evidence": [],
-      "blocker": "Existing connected Supabase projects contain GEM/GemAssist schemas and were intentionally not reused."
+      "evidence": [
+        "supabase/README.md",
+        "ops/PRODUCTION_ACTIVATION_RUNBOOK.md"
+      ],
+      "blocker": "Existing connected Supabase projects contain GEM/GemAssist schemas and were intentionally not reused. A dedicated or explicitly approved IWW project must be selected."
+    },
+    {
+      "id": "notification_outbox",
+      "title": "Durable staff-notification outbox and retry worker",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": [
+        "supabase/migrations/20260809064000_iww_notification_outbox.sql",
+        "supabase/migrations/20260809065000_iww_outbox_delivery_guard.sql",
+        "api/internal/notification-worker.js",
+        "api/worker.test.js",
+        "api/outbox-model.test.js",
+        "api/outbox-evidence.test.js"
+      ],
+      "blocker": "Requires the dedicated IWW database, worker secret, scheduled invocation, live signed workflow destinations, and retry/dead-letter verification."
     },
     {
       "id": "staff_notification",
@@ -51,17 +72,67 @@
       "requiredForLaunch": true,
       "evidence": [
         "api/_lib/http.js",
-        "api/_lib/persistence.js"
+        "api/_lib/persistence.js",
+        "api/internal/notification-worker.js"
       ],
-      "blocker": "Protected webhook URLs and signing secret must be configured and live delivery verified."
+      "blocker": "Protected webhook URLs and signing secret must be configured and successful live delivery must be evidenced."
     },
     {
       "id": "admin_review",
-      "title": "Authenticated administrative review queue",
-      "status": "blocked_dependency",
+      "title": "Authenticated administrative review queue and audit history",
+      "status": "prepared",
       "requiredForLaunch": true,
-      "evidence": [],
-      "blocker": "Depends on approved IWW authentication/database boundary."
+      "evidence": [
+        "api/admin/submissions.js",
+        "api/admin/history.js",
+        "src/admin/AdminApp.jsx",
+        "src/admin/HistoryApp.jsx",
+        "admin.html",
+        "admin-history.html",
+        "supabase/migrations/20260809062000_iww_staff_review.sql",
+        "api/admin.test.js",
+        "api/release-config.test.js"
+      ],
+      "blocker": "Requires the approved IWW Auth/database project, browser-safe publishable configuration, staff Auth users, role assignment, and live queue/history verification."
+    },
+    {
+      "id": "staff_role_governance",
+      "title": "Controlled reviewer/admin role lifecycle",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": [
+        "api/admin/staff.js",
+        "supabase/migrations/20260809066000_iww_staff_role_management.sql",
+        "supabase/migrations/20260809067000_iww_staff_role_evidence_guard.sql",
+        "api/staff-management.test.js",
+        "api/staff-evidence.test.js"
+      ],
+      "blocker": "Initial staff identities and the first controlled administrator assignment cannot be verified until the dedicated IWW Auth project exists."
+    },
+    {
+      "id": "operational_readiness",
+      "title": "Protected deep operational readiness probe",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": [
+        "api/internal/readiness.js",
+        "api/readiness.test.js",
+        "ops/PRODUCTION_ENVIRONMENT.md"
+      ],
+      "blocker": "The probe cannot return live ready until the dedicated database schema, workflow secrets, origin, and worker configuration are activated."
+    },
+    {
+      "id": "abuse_protection",
+      "title": "Layered public-intake abuse protection",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": [
+        "api/inquiries.js",
+        "api/membership-applications.js",
+        "supabase/migrations/20260809068000_iww_intake_throttle.sql",
+        "api/intake-throttle.test.js"
+      ],
+      "blocker": "Application/database controls are prepared; production edge/WAF rate limiting and live abuse testing remain provider configuration work."
     },
     {
       "id": "legal_policy",
@@ -72,7 +143,7 @@
         "trust-center.html",
         "PUBLIC_CLAIM_AUDIT.md"
       ],
-      "blocker": "Policies and entity-specific legal review have not been supplied/approved."
+      "blocker": "Policies and entity-specific legal review have not been supplied or approved."
     },
     {
       "id": "public_claims",
@@ -82,7 +153,7 @@
       "evidence": [
         "PUBLIC_CLAIM_AUDIT.md"
       ],
-      "blocker": "Evidence owners and substantiation are incomplete; legacy routes remain gated."
+      "blocker": "Evidence owners and substantiation are incomplete; legacy service routes remain gated."
     },
     {
       "id": "payments",
@@ -92,7 +163,7 @@
       "evidence": [
         "donate.html"
       ],
-      "blocker": "Provider, pricing/donation treatment, receipts, refunds, and webhook rules are not approved."
+      "blocker": "Provider, pricing/donation treatment, receipts, refunds, and webhook rules are not approved. Payment collection remains disabled."
     },
     {
       "id": "transactional_email",
@@ -102,7 +173,7 @@
       "evidence": [
         "supabase/migrations/20260809060000_iww_production_core.sql"
       ],
-      "blocker": "Email provider/sender domain and durable production database are not configured."
+      "blocker": "Email provider, verified sender domain, approved message content, and live delivery/reconciliation are not configured."
     },
     {
       "id": "backup_recovery",
@@ -110,20 +181,23 @@
       "status": "blocked_dependency",
       "requiredForLaunch": true,
       "evidence": [
-        "supabase/README.md"
+        "supabase/README.md",
+        "ops/PRODUCTION_ACTIVATION_RUNBOOK.md"
       ],
-      "blocker": "Cannot exercise provider backup/recovery until the dedicated production data project exists."
+      "blocker": "Provider backup/restore cannot be exercised until the dedicated production data project exists; retention/deletion periods also require approved policy."
     },
     {
       "id": "ci_deploy_evidence",
-      "title": "CI and production deployment evidence",
-      "status": "blocked_external",
+      "title": "CI and deployment evidence",
+      "status": "in_progress",
       "requiredForLaunch": true,
       "evidence": [
         ".github/workflows/production-ci.yml",
-        "vercel.json"
+        ".github/workflows/production-completion-ci.yml",
+        "vercel.json",
+        "package.json"
       ],
-      "blocker": "GitHub Actions runner is failing before useful step logs and recent Vercel preview builds are rate-limited."
+      "blocker": "A Vercel preview has succeeded on this branch, but current provider checks remain inconsistent/rate-limited and the latest head still needs clean CI/build evidence."
     },
     {
       "id": "e2e_accessibility_security",
@@ -131,13 +205,10 @@
       "status": "in_progress",
       "requiredForLaunch": true,
       "evidence": [
-        "api/production.test.js",
-        "api/persistence.test.js",
-        "api/origin-contracts.test.js",
-        "api/release-config.test.js",
-        "api/data-model.test.js"
+        "api/*.test.js",
+        "SECURITY_THREAT_MODEL.md"
       ],
-      "blocker": "Automated contract coverage exists; live end-to-end and assistive-technology verification require deployable provider environments."
+      "blocker": "Automated contract coverage exists; live end-to-end, assistive-technology, mobile, performance, and production security verification require activated provider environments."
     }
   ]
 }
