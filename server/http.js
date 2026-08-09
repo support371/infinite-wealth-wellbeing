@@ -13,8 +13,8 @@ export function applySecurityHeaders(req, res) {
     res.setHeader('Vary', 'Origin');
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Idempotency-Key');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type,Idempotency-Key');
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -95,10 +95,7 @@ export async function forwardWebhook(url, payload, secret) {
       signal: controller.signal,
     });
 
-    if (!response.ok) {
-      return { ok: false, status: 502, error: 'workflow_delivery_failed' };
-    }
-
+    if (!response.ok) return { ok: false, status: 502, error: 'workflow_delivery_failed' };
     return { ok: true };
   } catch {
     return { ok: false, status: 502, error: 'workflow_unavailable' };
