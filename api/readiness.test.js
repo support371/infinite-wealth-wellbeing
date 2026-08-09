@@ -11,6 +11,9 @@ const ENV_KEYS = [
   'IWW_SUPABASE_URL',
   'IWW_SUPABASE_SERVICE_ROLE_KEY',
   'IWW_NOTIFICATION_WORKER_SECRET',
+  'IWW_EMAIL_DELIVERY_URL',
+  'IWW_EMAIL_DELIVERY_SECRET',
+  'IWW_EMAIL_WORKER_SECRET',
 ];
 const ORIGINAL_ENV = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
 
@@ -22,13 +25,13 @@ function configure() {
   process.env.IWW_SUPABASE_URL = 'https://iww-test.supabase.co';
   process.env.IWW_SUPABASE_SERVICE_ROLE_KEY = 'server-secret-test-key';
   process.env.IWW_NOTIFICATION_WORKER_SECRET = 'worker-secret';
+  process.env.IWW_EMAIL_DELIVERY_URL = 'https://email-adapter.test/deliver';
+  process.env.IWW_EMAIL_DELIVERY_SECRET = 'email-delivery-secret';
+  process.env.IWW_EMAIL_WORKER_SECRET = 'email-worker-secret';
 }
 
 function request(token = 'worker-secret', method = 'GET') {
-  return {
-    method,
-    headers: token ? { authorization: `Bearer ${token}` } : {},
-  };
+  return { method, headers: token ? { authorization: `Bearer ${token}` } : {} };
 }
 
 function response() {
@@ -74,7 +77,7 @@ test('deep readiness rejects unsupported methods', async () => {
   assert.equal(res.headers.allow, 'GET');
 });
 
-test('deep readiness returns ready only when required schema tables respond', async () => {
+test('deep readiness returns ready only when configuration and required schema tables respond', async () => {
   const calls = [];
   global.fetch = async (url, options) => {
     calls.push({ url, options });
@@ -86,10 +89,22 @@ test('deep readiness returns ready only when required schema tables respond', as
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.status, 'ready');
   assert.equal(res.body.checks.configuration.persistenceConfigured, true);
+  assert.equal(res.body.checks.configuration.emailDeliveryConfigured, true);
+  assert.equal(res.body.checks.configuration.emailWorkerSecretConfigured, true);
   assert.equal(res.body.checks.database.notificationOutbox.ok, true);
   assert.equal(res.body.checks.database.emailOutbox.ok, true);
   assert.equal(calls.length, 6);
   assert.equal(calls.every((call) => call.options.headers.apikey === 'server-secret-test-key'), true);
+});
+
+test('deep readiness degrades when transactional email adapter configuration is missing', async () => {
+  delete process.env.IWW_EMAIL_DELIVERY_URL;
+  delete process.env.IWW_EMAIL_DELIVERY_SECRET;
+  global.fetch = async () => ({ ok: true, status: 200, json: async () => [] });
+  const res = response();
+  await readinessHandler(request(), res);
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.body.checks.configuration.emailDeliveryConfigured, false);
 });
 
 test('deep readiness degrades when one required schema table is missing', async () => {
