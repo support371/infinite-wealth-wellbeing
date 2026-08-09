@@ -22,7 +22,7 @@
       "title": "Durable idempotent persistence architecture",
       "status": "prepared",
       "requiredForLaunch": true,
-      "evidence": ["api/_lib/persistence.js", "supabase/migrations/20260809060000_iww_production_core.sql", "supabase/migrations/20260809061000_iww_atomic_intake.sql", "api/persistence.test.js", "api/data-model.test.js"],
+      "evidence": ["server/persistence.js", "supabase/migrations/20260809060000_iww_production_core.sql", "supabase/migrations/20260809061000_iww_atomic_intake.sql", "api/persistence.test.js", "api/data-model.test.js"],
       "blocker": "Dedicated or explicitly approved IWW database has not been selected; migrations and live persistence verification are therefore not yet complete."
     },
     {
@@ -46,7 +46,7 @@
       "title": "Signed staff notification workflow",
       "status": "prepared",
       "requiredForLaunch": true,
-      "evidence": ["api/_lib/http.js", "api/_lib/persistence.js", "api/internal/notification-worker.js"],
+      "evidence": ["server/http.js", "server/persistence.js", "api/internal/notification-worker.js"],
       "blocker": "Protected webhook URLs and signing secret must be configured and successful live delivery must be evidenced."
     },
     {
@@ -79,7 +79,7 @@
       "status": "prepared",
       "requiredForLaunch": true,
       "evidence": ["api/internal/readiness.js", "api/readiness.test.js", "ops/PRODUCTION_ENVIRONMENT.md"],
-      "blocker": "The probe cannot return live ready until the dedicated database schema, workflow secrets, origin, and worker configuration are activated."
+      "blocker": "The probe cannot return live ready until the dedicated database schema, workflow secrets, origin, worker configuration, and both durable outbox tables are activated."
     },
     {
       "id": "abuse_protection",
@@ -115,11 +115,19 @@
     },
     {
       "id": "backup_recovery",
-      "title": "Backup, restore, retention, and deletion procedures verified",
-      "status": "blocked_dependency",
+      "title": "Backup, restore, retention, and deletion procedures",
+      "status": "prepared",
       "requiredForLaunch": true,
-      "evidence": ["supabase/README.md", "ops/PRODUCTION_ACTIVATION_RUNBOOK.md"],
-      "blocker": "Provider backup/restore cannot be exercised until the dedicated production data project exists; retention/deletion periods also require approved policy."
+      "evidence": ["supabase/verification/restore_acceptance.sql", "ops/BACKUP_RECOVERY_RUNBOOK.md", "api/recovery-contract.test.js", "supabase/README.md"],
+      "blocker": "Read-only restore acceptance and drill procedure are prepared; provider backup/PITR configuration, approved RPO/RTO/retention decisions, and a successful restore drill remain required."
+    },
+    {
+      "id": "function_budget",
+      "title": "Vercel serverless function budget",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["server/", "api/function-budget.test.js", "vercel.json"],
+      "blocker": "Shared helpers have been moved outside api/ and the source budget is nine handlers; a fresh successful Vercel deployment is required to verify the provider-side function count."
     },
     {
       "id": "ci_deploy_evidence",
@@ -127,7 +135,7 @@
       "status": "in_progress",
       "requiredForLaunch": true,
       "evidence": [".github/workflows/production-ci.yml", ".github/workflows/production-completion-ci.yml", "vercel.json", "package.json"],
-      "blocker": "A Vercel preview has succeeded on this branch, but current provider checks remain inconsistent/rate-limited and the latest head still needs clean CI/build evidence."
+      "blocker": "Vercel has proven the full test/build phase can succeed, but the latest post-refactor head still needs a clean deployment and GitHub CI evidence remains inconsistent."
     },
     {
       "id": "e2e_accessibility_security",
