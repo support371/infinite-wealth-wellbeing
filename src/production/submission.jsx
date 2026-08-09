@@ -1,27 +1,12 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import {
+  CONTACT_SUBJECTS,
+  MEMBERSHIP_INTERESTS,
+  MEMBERSHIP_TIERS,
+  SUBMISSION_LIMITS,
+} from '../../shared/submission-contracts.js';
 import './submission.css';
-
-const CONTACT_SUBJECTS = [
-  'General Inquiry',
-  'Wealth Education',
-  'Membership Questions',
-  'Prayer Request',
-  'Well-being Service Information',
-  'Ministry Partnership',
-  'Retreat Information',
-  'Donation Enquiry',
-  'Technical Support',
-];
-
-const MEMBERSHIP_TIERS = ['Explorer', 'Member', 'Guardian'];
-const MEMBERSHIP_INTERESTS = [
-  'Wealth & Financial Education',
-  'Holistic Well-being Information',
-  'Spiritual Well-being & Ministry',
-  'Community & Connection',
-  'All of the Above',
-];
 
 function createIdempotencyKey(flow) {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -128,22 +113,22 @@ function ContactForm() {
     >
       <h2>Send a message</h2>
       <p className="submission-card-copy">Required fields are marked. A successful submission returns a reference you can keep.</p>
-      <form className="submission-form" onSubmit={handleSubmit} noValidate>
+      <form className="submission-form" onSubmit={handleSubmit}>
         <div className="submission-honeypot" aria-hidden="true">
           <label>Company website<input name="companyWebsite" tabIndex="-1" autoComplete="off" /></label>
         </div>
         <div className="submission-row">
-          <label>First name *<input name="firstName" autoComplete="given-name" maxLength="80" required /><FieldError name="firstName" errors={errors}/></label>
-          <label>Last name *<input name="lastName" autoComplete="family-name" maxLength="80" required /><FieldError name="lastName" errors={errors}/></label>
+          <label>First name *<input name="firstName" autoComplete="given-name" maxLength={SUBMISSION_LIMITS.firstName} required /><FieldError name="firstName" errors={errors}/></label>
+          <label>Last name *<input name="lastName" autoComplete="family-name" maxLength={SUBMISSION_LIMITS.lastName} required /><FieldError name="lastName" errors={errors}/></label>
         </div>
-        <label>Email address *<input type="email" name="email" autoComplete="email" maxLength="254" required /><FieldError name="email" errors={errors}/></label>
+        <label>Email address *<input type="email" name="email" autoComplete="email" maxLength={SUBMISSION_LIMITS.email} required /><FieldError name="email" errors={errors}/></label>
         <label>Subject *
-          <select name="subject" defaultValue="General Inquiry" required>
+          <select name="subject" defaultValue={CONTACT_SUBJECTS[0]} required>
             {CONTACT_SUBJECTS.map((subject) => <option key={subject} value={subject}>{subject}</option>)}
           </select>
           <FieldError name="subject" errors={errors}/>
         </label>
-        <label>Message *<textarea name="message" rows="7" minLength="10" maxLength="4000" required placeholder="Tell us what you need, without including sensitive account or health information." /><FieldError name="message" errors={errors}/></label>
+        <label>Message *<textarea name="message" rows="7" minLength="10" maxLength={SUBMISSION_LIMITS.message} required placeholder="Tell us what you need, without including sensitive account or health information." /><FieldError name="message" errors={errors}/></label>
         <label className="submission-consent"><input type="checkbox" name="consent" value="yes" required /><span>I consent to Infinite Wealth &amp; Well-being processing this submission and contacting me about this request.</span></label>
         <FieldError name="consent" errors={errors}/>
         <button className="submission-submit" type="submit" disabled={status.type === 'loading'}>{status.type === 'loading' ? 'Sending…' : 'Send message'}</button>
@@ -195,28 +180,28 @@ function MembershipForm() {
     >
       <h2>Membership application</h2>
       <p className="submission-card-copy">Choose the tier you are interested in. No payment information is collected here.</p>
-      <form className="submission-form" onSubmit={handleSubmit} noValidate>
+      <form className="submission-form" onSubmit={handleSubmit}>
         <div className="submission-honeypot" aria-hidden="true">
           <label>Company website<input name="companyWebsite" tabIndex="-1" autoComplete="off" /></label>
         </div>
         <div className="submission-row">
-          <label>First name *<input name="firstName" autoComplete="given-name" maxLength="80" required /><FieldError name="firstName" errors={errors}/></label>
-          <label>Last name *<input name="lastName" autoComplete="family-name" maxLength="80" required /><FieldError name="lastName" errors={errors}/></label>
+          <label>First name *<input name="firstName" autoComplete="given-name" maxLength={SUBMISSION_LIMITS.firstName} required /><FieldError name="firstName" errors={errors}/></label>
+          <label>Last name *<input name="lastName" autoComplete="family-name" maxLength={SUBMISSION_LIMITS.lastName} required /><FieldError name="lastName" errors={errors}/></label>
         </div>
-        <label>Email address *<input type="email" name="email" autoComplete="email" maxLength="254" required /><FieldError name="email" errors={errors}/></label>
+        <label>Email address *<input type="email" name="email" autoComplete="email" maxLength={SUBMISSION_LIMITS.email} required /><FieldError name="email" errors={errors}/></label>
         <label>Requested tier *
-          <select name="tier" defaultValue="Explorer" required>
+          <select name="tier" defaultValue={MEMBERSHIP_TIERS[0]} required>
             {MEMBERSHIP_TIERS.map((tier) => <option key={tier} value={tier}>{tier}</option>)}
           </select>
           <FieldError name="tier" errors={errors}/>
         </label>
         <label>Primary interest *
-          <select name="interest" defaultValue="Wealth & Financial Education" required>
+          <select name="interest" defaultValue={MEMBERSHIP_INTERESTS[0]} required>
             {MEMBERSHIP_INTERESTS.map((interest) => <option key={interest} value={interest}>{interest}</option>)}
           </select>
           <FieldError name="interest" errors={errors}/>
         </label>
-        <label>What brings you here? <textarea name="introduction" rows="6" maxLength="3000" placeholder="Optional. If you write something, please use at least a full sentence and avoid sensitive information." /><FieldError name="introduction" errors={errors}/></label>
+        <label>What brings you here? <textarea name="introduction" rows="6" maxLength={SUBMISSION_LIMITS.introduction} placeholder="Optional. If you write something, please use at least a full sentence and avoid sensitive information." /><FieldError name="introduction" errors={errors}/></label>
         <label className="submission-consent"><input type="checkbox" name="consent" value="yes" required /><span>I consent to Infinite Wealth &amp; Well-being processing this application and contacting me about membership.</span></label>
         <FieldError name="consent" errors={errors}/>
         <button className="submission-submit" type="submit" disabled={status.type === 'loading'}>{status.type === 'loading' ? 'Submitting…' : 'Submit application'}</button>
