@@ -87,13 +87,14 @@ test('deep readiness returns ready only when required schema tables respond', as
   assert.equal(res.body.status, 'ready');
   assert.equal(res.body.checks.configuration.persistenceConfigured, true);
   assert.equal(res.body.checks.database.notificationOutbox.ok, true);
-  assert.equal(calls.length, 5);
+  assert.equal(res.body.checks.database.emailOutbox.ok, true);
+  assert.equal(calls.length, 6);
   assert.equal(calls.every((call) => call.options.headers.apikey === 'server-secret-test-key'), true);
 });
 
 test('deep readiness degrades when one required schema table is missing', async () => {
   global.fetch = async (url) => {
-    if (url.includes('/iww_notification_outbox?')) {
+    if (url.includes('/iww_email_outbox?')) {
       return { ok: false, status: 404, json: async () => ({ message: 'relation missing' }) };
     }
     return { ok: true, status: 200, json: async () => [] };
@@ -103,7 +104,7 @@ test('deep readiness degrades when one required schema table is missing', async 
   await readinessHandler(request(), res);
   assert.equal(res.statusCode, 503);
   assert.equal(res.body.status, 'degraded');
-  assert.equal(res.body.checks.database.notificationOutbox.ok, false);
+  assert.equal(res.body.checks.database.emailOutbox.ok, false);
 });
 
 test('deep readiness degrades without persistence configuration and makes no database calls', async () => {
@@ -117,5 +118,6 @@ test('deep readiness degrades without persistence configuration and makes no dat
   assert.equal(res.statusCode, 503);
   assert.equal(res.body.checks.configuration.persistenceConfigured, false);
   assert.equal(res.body.checks.database.inquiries.error, 'persistence_not_configured');
+  assert.equal(res.body.checks.database.emailOutbox.error, 'persistence_not_configured');
   assert.equal(called, false);
 });
