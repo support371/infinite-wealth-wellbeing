@@ -9,6 +9,8 @@ const ENV_KEYS = [
   'INQUIRY_WEBHOOK_URL',
   'MEMBERSHIP_WEBHOOK_URL',
   'WORKFLOW_WEBHOOK_SECRET',
+  'IWW_SUPABASE_URL',
+  'IWW_SUPABASE_SERVICE_ROLE_KEY',
   'VERCEL_ENV',
 ];
 const ORIGINAL_ENV = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
@@ -49,26 +51,48 @@ afterEach(() => {
   global.fetch = ORIGINAL_FETCH;
 });
 
-test('health is degraded until both workflows and signing are configured', () => {
-  process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
-  process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
-  const res = createResponse();
-  healthHandler(request('GET'), res);
-  assert.equal(res.statusCode, 503);
-  assert.equal(res.body.status, 'degraded');
-  assert.equal(res.body.checks.workflowSigningConfigured, false);
-  assert.equal(res.headers['cache-control'], 'no-store');
-});
-
-test('health is ready when workflow URLs and signing secret exist', () => {
+test('health remains degraded when persistence is missing', () => {
+  process.env.PUBLIC_APP_ORIGIN = 'https://iww.example';
   process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
   process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
   process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
   const res = createResponse();
   healthHandler(request('GET'), res);
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.body.status, 'degraded');
+  assert.equal(res.body.checks.workflowSigningConfigured, true);
+  assert.equal(res.body.checks.persistenceUrlConfigured, false);
+  assert.equal(res.body.checks.persistenceServiceRoleConfigured, false);
+  assert.equal(res.headers['cache-control'], 'no-store');
+});
+
+test('health remains degraded when public origin is missing', () => {
+  process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
+  process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
+  process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
+  process.env.IWW_SUPABASE_URL = 'https://project.supabase.co';
+  process.env.IWW_SUPABASE_SERVICE_ROLE_KEY = 'server-only-key';
+  const res = createResponse();
+  healthHandler(request('GET'), res);
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.body.checks.publicOriginConfigured, false);
+});
+
+test('health is ready only when workflows, origin, signing, and persistence exist', () => {
+  process.env.PUBLIC_APP_ORIGIN = 'https://iww.example';
+  process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
+  process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
+  process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
+  process.env.IWW_SUPABASE_URL = 'https://project.supabase.co';
+  process.env.IWW_SUPABASE_SERVICE_ROLE_KEY = 'server-only-key';
+  const res = createResponse();
+  healthHandler(request('GET'), res);
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.status, 'ready');
+  assert.equal(res.body.checks.publicOriginConfigured, true);
   assert.equal(res.body.checks.workflowSigningConfigured, true);
+  assert.equal(res.body.checks.persistenceUrlConfigured, true);
+  assert.equal(res.body.checks.persistenceServiceRoleConfigured, true);
 });
 
 test('inquiry rejects invalid public values before delivery', async () => {
