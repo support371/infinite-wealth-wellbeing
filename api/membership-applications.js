@@ -10,13 +10,13 @@ import {
   requestMetadata,
   requireAllowedOrigin,
   requirePost,
-} from './_lib/http.js';
+} from '../server/http.js';
 import {
   hasSuccessfulNotification,
   persistMembershipApplication,
   readIdempotencyKey,
   recordNotificationDelivery,
-} from './_lib/persistence.js';
+} from '../server/persistence.js';
 
 const ALLOWED_TIERS = new Set(MEMBERSHIP_TIERS);
 const ALLOWED_INTERESTS = new Set(MEMBERSHIP_INTERESTS);
