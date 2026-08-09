@@ -40,7 +40,7 @@ function mapPersistenceError(data = {}) {
   return { status: 502, error: 'persistence_failed' };
 }
 
-async function post(path, body, extraHeaders = {}) {
+async function request(path, { method = 'GET', body, headers = {} } = {}) {
   const config = configuration();
   if (!config) {
     return { ok: false, status: 503, error: 'persistence_not_configured' };
@@ -51,9 +51,9 @@ async function post(path, body, extraHeaders = {}) {
 
   try {
     const response = await fetch(`${config.baseUrl}${path}`, {
-      method: 'POST',
-      headers: serviceHeaders(config.serviceRoleKey, extraHeaders),
-      body: JSON.stringify(body),
+      method,
+      headers: serviceHeaders(config.serviceRoleKey, headers),
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       signal: controller.signal,
     });
 
@@ -68,6 +68,10 @@ async function post(path, body, extraHeaders = {}) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function post(path, body, extraHeaders = {}) {
+  return request(path, { method: 'POST', body, headers: extraHeaders });
 }
 
 export function hashSubmission(payload) {
@@ -135,6 +139,24 @@ export async function persistMembershipApplication({ idempotencyKey, person, req
     },
     p_consent_statement_version: 'web-v1',
   });
+}
+
+export async function hasSuccessfulNotification({ submissionKind, submissionId }) {
+  if (!submissionId) return { ok: false, status: 400, error: 'submission_id_required' };
+  const query = new URLSearchParams({
+    submission_kind: `eq.${submissionKind}`,
+    submission_id: `eq.${submissionId}`,
+    channel: 'eq.webhook',
+    status: 'eq.sent',
+    select: 'id',
+    limit: '1',
+  });
+  const result = await request(`/rest/v1/iww_notification_deliveries?${query.toString()}`);
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    sent: Array.isArray(result.data) && result.data.length > 0,
+  };
 }
 
 export async function recordNotificationDelivery({ submissionKind, submissionId, delivered }) {
