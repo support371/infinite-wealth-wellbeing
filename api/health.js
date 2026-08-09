@@ -11,10 +11,13 @@ export default function handler(req, res) {
   const checks = {
     inquiryWorkflowConfigured: Boolean(process.env.INQUIRY_WEBHOOK_URL),
     membershipWorkflowConfigured: Boolean(process.env.MEMBERSHIP_WEBHOOK_URL),
+    workflowSigningConfigured: Boolean(process.env.WORKFLOW_WEBHOOK_SECRET),
     publicOriginConfigured: Boolean(process.env.PUBLIC_APP_ORIGIN),
   };
 
-  const ready = checks.inquiryWorkflowConfigured && checks.membershipWorkflowConfigured;
+  const ready = checks.inquiryWorkflowConfigured
+    && checks.membershipWorkflowConfigured
+    && checks.workflowSigningConfigured;
 
   return res.status(ready ? 200 : 503).json({
     status: ready ? 'ready' : 'degraded',
