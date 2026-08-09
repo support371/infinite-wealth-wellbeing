@@ -34,6 +34,7 @@ test('shared server helpers live outside the Vercel api function-discovery direc
     'server/persistence.js',
     'server/staff-auth.js',
     'server/supabase-server.js',
+    'server/email-adapter.js',
   ]) {
     assert.doesNotThrow(() => readFileSync(join(root, helper), 'utf8'), `${helper} is missing`);
   }
@@ -47,9 +48,11 @@ test('all deployable API files are intentional HTTP handlers', () => {
     'api/admin/history.js',
     'api/admin/staff.js',
     'api/admin/submissions.js',
+    'api/internal/email-worker.js',
     'api/internal/maintenance.js',
     'api/internal/notification-worker.js',
     'api/internal/readiness.js',
   ]);
   assert.deepEqual(new Set(productionFunctions), expected);
+  assert.equal(productionFunctions.length, 10);
 });
