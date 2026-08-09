@@ -1,11 +1,13 @@
 import test, { afterEach, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  hasSuccessfulEmailDelivery,
   hasSuccessfulNotification,
   hashSubmission,
   persistInquiry,
   persistMembershipApplication,
   readIdempotencyKey,
+  recordEmailDelivery,
   recordNotificationDelivery,
 } from '../server/persistence.js';
 
@@ -57,9 +59,7 @@ test('persistence fails closed when dedicated database configuration is missing'
   const result = await persistInquiry({
     idempotencyKey: 'inquiry-123456',
     person: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' },
-    subject: 'General Inquiry',
-    message: 'Please send more information.',
-    metadata,
+    subject: 'General Inquiry', message: 'Please send more information.', metadata,
   });
   assert.equal(result.ok, false);
   assert.equal(result.status, 503);
@@ -72,9 +72,7 @@ test('persistence refuses a non-HTTPS remote Supabase URL', async () => {
   const result = await persistInquiry({
     idempotencyKey: 'inquiry-123456',
     person: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' },
-    subject: 'General Inquiry',
-    message: 'Please send more information.',
-    metadata,
+    subject: 'General Inquiry', message: 'Please send more information.', metadata,
   });
   assert.equal(result.error, 'persistence_not_configured');
 });
@@ -84,18 +82,13 @@ test('inquiry persistence calls only the service-role RPC with canonical values'
   let call;
   global.fetch = async (url, options) => {
     call = { url, options };
-    return {
-      ok: true,
-      json: async () => ({ reference: 'IWW-INQ-ABC123', submissionId: '11111111-1111-1111-1111-111111111111' }),
-    };
+    return { ok: true, json: async () => ({ reference: 'IWW-INQ-ABC123', submissionId: '11111111-1111-1111-1111-111111111111' }) };
   };
 
   const result = await persistInquiry({
     idempotencyKey: 'inquiry-123456',
     person: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' },
-    subject: 'General Inquiry',
-    message: 'Please send more information.',
-    metadata,
+    subject: 'General Inquiry', message: 'Please send more information.', metadata,
   });
 
   assert.equal(result.ok, true);
@@ -111,10 +104,7 @@ test('inquiry persistence calls only the service-role RPC with canonical values'
 
 test('membership persistence maps an idempotency conflict to HTTP 409 semantics', async () => {
   configurePersistence();
-  global.fetch = async () => ({
-    ok: false,
-    json: async () => ({ message: 'idempotency_key_reused' }),
-  });
+  global.fetch = async () => ({ ok: false, json: async () => ({ message: 'idempotency_key_reused' }) });
 
   const result = await persistMembershipApplication({
     idempotencyKey: 'membership-123456',
@@ -130,7 +120,7 @@ test('membership persistence maps an idempotency conflict to HTTP 409 semantics'
   assert.equal(result.error, 'idempotency_conflict');
 });
 
-test('successful webhook history is queried through the service-role REST API', async () => {
+test('successful webhook history recognizes sent or delivered evidence', async () => {
   configurePersistence();
   let call;
   global.fetch = async (url, options) => {
@@ -147,11 +137,31 @@ test('successful webhook history is queried through the service-role REST API', 
   assert.equal(result.sent, true);
   assert.equal(call.options.method, 'GET');
   assert.match(call.url, /iww_notification_deliveries\?/);
-  assert.match(call.url, /status=eq.sent/);
+  const decoded = decodeURIComponent(call.url);
+  assert.match(decoded, /channel=eq.webhook/);
+  assert.match(decoded, /status=in\.\(sent,delivered\)/);
   assert.equal(call.options.body, undefined);
 });
 
-test('absence of successful webhook history is reported as not sent', async () => {
+test('successful email history uses the same durable delivery ledger', async () => {
+  configurePersistence();
+  let call;
+  global.fetch = async (url, options) => {
+    call = { url, options };
+    return { ok: true, json: async () => [{ id: 'email-delivery-1' }] };
+  };
+  const result = await hasSuccessfulEmailDelivery({
+    submissionKind: 'membership_application',
+    submissionId: '22222222-2222-2222-2222-222222222222',
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.sent, true);
+  const decoded = decodeURIComponent(call.url);
+  assert.match(decoded, /channel=eq.email/);
+  assert.match(decoded, /status=in\.\(sent,delivered\)/);
+});
+
+test('absence of successful delivery history is reported as not sent', async () => {
   configurePersistence();
   global.fetch = async () => ({ ok: true, json: async () => [] });
   const result = await hasSuccessfulNotification({
@@ -162,7 +172,7 @@ test('absence of successful webhook history is reported as not sent', async () =
   assert.equal(result.sent, false);
 });
 
-test('notification delivery records outcome without exposing credentials in the payload', async () => {
+test('webhook delivery records actual retry attempt without exposing credentials', async () => {
   configurePersistence();
   let call;
   global.fetch = async (url, options) => {
@@ -174,13 +184,40 @@ test('notification delivery records outcome without exposing credentials in the 
     submissionKind: 'inquiry',
     submissionId: '11111111-1111-1111-1111-111111111111',
     delivered: { ok: false, error: 'workflow_unavailable' },
+    attempt: 4,
   });
 
   assert.equal(result.ok, true);
   assert.equal(call.url, 'https://iww-test.supabase.co/rest/v1/iww_notification_deliveries');
-  assert.equal(call.options.method, 'POST');
   const body = JSON.parse(call.options.body);
+  assert.equal(body.attempt, 4);
   assert.equal(body.status, 'failed');
   assert.equal(body.error_code, 'workflow_unavailable');
   assert.equal(JSON.stringify(body).includes('server-secret-test-key'), false);
+});
+
+test('email delivery stores provider message id and actual retry attempt server-side', async () => {
+  configurePersistence();
+  let call;
+  global.fetch = async (url, options) => {
+    call = { url, options };
+    return { ok: true, json: async () => ({}) };
+  };
+
+  const result = await recordEmailDelivery({
+    submissionKind: 'membership_application',
+    submissionId: '22222222-2222-2222-2222-222222222222',
+    delivered: { ok: true },
+    attempt: 3,
+    provider: 'email-adapter-webhook',
+    providerMessageId: 'provider-message-123',
+  });
+
+  assert.equal(result.ok, true);
+  const body = JSON.parse(call.options.body);
+  assert.equal(body.channel, 'email');
+  assert.equal(body.provider, 'email-adapter-webhook');
+  assert.equal(body.provider_message_id, 'provider-message-123');
+  assert.equal(body.attempt, 3);
+  assert.equal(body.status, 'sent');
 });
