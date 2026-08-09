@@ -8,11 +8,7 @@ const publishableKey = import.meta.env.VITE_IWW_SUPABASE_PUBLISHABLE_KEY;
 const configured = Boolean(supabaseUrl && publishableKey);
 const supabase = configured
   ? createClient(supabaseUrl, publishableKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
     })
   : null;
 
@@ -25,7 +21,7 @@ const NEXT_STATUSES = {
   spam: ['closed'],
   closed: [],
 };
-
+const REASON_REQUIRED_STATUSES = new Set(['approved', 'rejected', 'closed', 'spam']);
 const STATUS_OPTIONS = ['', 'received', 'triaged', 'in_review', 'approved', 'rejected', 'closed', 'spam'];
 
 async function apiRequest(session, path, options = {}) {
@@ -41,6 +37,7 @@ async function apiRequest(session, path, options = {}) {
   if (!response.ok) {
     const error = new Error(data.error || 'request_failed');
     error.status = response.status;
+    error.code = data.error || 'request_failed';
     throw error;
   }
   return data;
@@ -94,6 +91,7 @@ function ReviewCard({ item, kind, onTransition, busy }) {
   const options = NEXT_STATUSES[item.status] || [];
   const [toStatus, setToStatus] = useState(options[0] || '');
   const [reason, setReason] = useState('');
+  const reasonRequired = REASON_REQUIRED_STATUSES.has(toStatus);
 
   useEffect(() => {
     const next = NEXT_STATUSES[item.status] || [];
@@ -129,11 +127,22 @@ function ReviewCard({ item, kind, onTransition, busy }) {
 
       {options.length > 0 ? (
         <div className="admin-transition">
-          <select value={toStatus} onChange={(e) => setToStatus(e.target.value)}>
+          <select value={toStatus} onChange={(e) => setToStatus(e.target.value)} aria-label="Next review status">
             {options.map((status) => <option key={status} value={status}>{status.replace('_', ' ')}</option>)}
           </select>
-          <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength="1000" placeholder="Reason / review note (optional)" />
-          <button disabled={busy || !toStatus} onClick={() => onTransition(item, toStatus, reason)}>{busy ? 'Updating…' : 'Apply transition'}</button>
+          <input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            maxLength="1000"
+            required={reasonRequired}
+            aria-required={reasonRequired}
+            placeholder={reasonRequired ? 'Reason required for this decision' : 'Review note (optional)'}
+          />
+          {reasonRequired && <small>A durable rationale is required for approved, rejected, spam, and closed decisions.</small>}
+          <button
+            disabled={busy || !toStatus || (reasonRequired && !reason.trim())}
+            onClick={() => onTransition(item, toStatus, reason)}
+          >{busy ? 'Updating…' : 'Apply transition'}</button>
         </div>
       ) : (
         <p className="admin-terminal">This record is in a terminal review state.</p>
@@ -168,11 +177,8 @@ function ReviewConsole({ session, onSignOut }) {
         onSignOut();
         return;
       }
-      if (requestError.status === 403) {
-        setError('This Auth account does not have an active IWW reviewer/admin role.');
-      } else {
-        setError('The review queue is unavailable. Check the production readiness gates and try again.');
-      }
+      if (requestError.status === 403) setError('This Auth account does not have an active IWW reviewer/admin role.');
+      else setError('The review queue is unavailable. Check the production readiness gates and try again.');
     } finally {
       setLoading(false);
     }
@@ -186,16 +192,13 @@ function ReviewConsole({ session, onSignOut }) {
     try {
       await apiRequest(session, '/api/admin/submissions', {
         method: 'PATCH',
-        body: JSON.stringify({
-          kind,
-          submissionId: item.id,
-          toStatus,
-          reason,
-        }),
+        body: JSON.stringify({ kind, submissionId: item.id, toStatus, reason }),
       });
       await load();
     } catch (requestError) {
-      if (requestError.status === 409) {
+      if (requestError.code === 'status_reason_required') {
+        setError('A review rationale is required for that terminal decision.');
+      } else if (requestError.status === 409) {
         setError('That status transition is not allowed from the record’s current state. Refresh and review the latest status.');
       } else {
         setError('The review update could not be completed safely.');
@@ -219,6 +222,7 @@ function ReviewConsole({ session, onSignOut }) {
           <p>{session.user.email}</p>
         </div>
         <div className="admin-header-actions">
+          <a href="/admin/history">Audit history</a>
           <a href="/trust-center">Trust status</a>
           <button className="admin-secondary" onClick={signOut}>Sign out</button>
         </div>
@@ -245,13 +249,7 @@ function ReviewConsole({ session, onSignOut }) {
       ) : (
         <section className="admin-list">
           {items.map((item) => (
-            <ReviewCard
-              key={item.id}
-              item={item}
-              kind={kind}
-              busy={busyId === item.id}
-              onTransition={transition}
-            />
+            <ReviewCard key={item.id} item={item} kind={kind} busy={busyId === item.id} onTransition={transition} />
           ))}
         </section>
       )}
