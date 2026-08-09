@@ -9,6 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(process.cwd(), 'index.html'),
+        prelaunch: resolve(process.cwd(), 'prelaunch.html'),
         contact: resolve(process.cwd(), 'contact.html'),
         membershipApply: resolve(process.cwd(), 'membership-apply.html'),
         donate: resolve(process.cwd(), 'donate.html'),
