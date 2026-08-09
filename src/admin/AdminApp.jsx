@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
+import StaffMfaGate from './StaffMfaGate.jsx';
 import './admin.css';
 
 const supabaseUrl = import.meta.env.VITE_IWW_SUPABASE_URL;
@@ -80,7 +81,7 @@ function SignIn({ onSignedIn }) {
             {status && <div className="admin-alert admin-alert-error" role="alert">{status}</div>}
           </form>
         )}
-        <p className="admin-login-note">There is no public sign-up path here. A valid Auth account is still insufficient unless the server confirms an active reviewer or admin role.</p>
+        <p className="admin-login-note">There is no public sign-up path here. A valid Auth account is still insufficient unless the session completes MFA and the server confirms an active reviewer or admin role.</p>
         <a href="/">Return to release candidate</a>
       </section>
     </main>
@@ -177,7 +178,8 @@ function ReviewConsole({ session, onSignOut }) {
         onSignOut();
         return;
       }
-      if (requestError.status === 403) setError('This Auth account does not have an active IWW reviewer/admin role.');
+      if (requestError.code === 'mfa_required') setError('This session must complete MFA before staff data can be accessed.');
+      else if (requestError.status === 403) setError('This Auth account does not have an active IWW reviewer/admin role.');
       else setError('The review queue is unavailable. Check the production readiness gates and try again.');
     } finally {
       setLoading(false);
@@ -196,13 +198,10 @@ function ReviewConsole({ session, onSignOut }) {
       });
       await load();
     } catch (requestError) {
-      if (requestError.code === 'status_reason_required') {
-        setError('A review rationale is required for that terminal decision.');
-      } else if (requestError.status === 409) {
-        setError('That status transition is not allowed from the record’s current state. Refresh and review the latest status.');
-      } else {
-        setError('The review update could not be completed safely.');
-      }
+      if (requestError.code === 'status_reason_required') setError('A review rationale is required for that terminal decision.');
+      else if (requestError.code === 'mfa_required') setError('This session must complete MFA before staff data can be changed.');
+      else if (requestError.status === 409) setError('That status transition is not allowed from the record’s current state. Refresh and review the latest status.');
+      else setError('The review update could not be completed safely.');
     } finally {
       setBusyId('');
     }
@@ -281,7 +280,11 @@ function App() {
 
   if (!ready) return <main className="admin-login-shell"><div className="admin-empty">Checking staff session…</div></main>;
   if (!session) return <SignIn onSignedIn={setSession} />;
-  return <ReviewConsole session={session} onSignOut={() => setSession(null)} />;
+  return (
+    <StaffMfaGate supabase={supabase} session={session} onSession={setSession}>
+      <ReviewConsole session={session} onSignOut={() => setSession(null)} />
+    </StaffMfaGate>
+  );
 }
 
 createRoot(document.getElementById('root')).render(<App/>);
