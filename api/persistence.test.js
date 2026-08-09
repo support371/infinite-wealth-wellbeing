@@ -1,6 +1,7 @@
 import test, { afterEach, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  hasSuccessfulNotification,
   hashSubmission,
   persistInquiry,
   persistMembershipApplication,
@@ -99,6 +100,7 @@ test('inquiry persistence calls only the service-role RPC with canonical values'
 
   assert.equal(result.ok, true);
   assert.equal(call.url, 'https://iww-test.supabase.co/rest/v1/rpc/iww_accept_inquiry');
+  assert.equal(call.options.method, 'POST');
   assert.equal(call.options.headers.apikey, 'server-secret-test-key');
   assert.equal(call.options.headers.Authorization, 'Bearer server-secret-test-key');
   const body = JSON.parse(call.options.body);
@@ -128,6 +130,38 @@ test('membership persistence maps an idempotency conflict to HTTP 409 semantics'
   assert.equal(result.error, 'idempotency_conflict');
 });
 
+test('successful webhook history is queried through the service-role REST API', async () => {
+  configurePersistence();
+  let call;
+  global.fetch = async (url, options) => {
+    call = { url, options };
+    return { ok: true, json: async () => [{ id: 'delivery-1' }] };
+  };
+
+  const result = await hasSuccessfulNotification({
+    submissionKind: 'inquiry',
+    submissionId: '11111111-1111-1111-1111-111111111111',
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.sent, true);
+  assert.equal(call.options.method, 'GET');
+  assert.match(call.url, /iww_notification_deliveries\?/);
+  assert.match(call.url, /status=eq.sent/);
+  assert.equal(call.options.body, undefined);
+});
+
+test('absence of successful webhook history is reported as not sent', async () => {
+  configurePersistence();
+  global.fetch = async () => ({ ok: true, json: async () => [] });
+  const result = await hasSuccessfulNotification({
+    submissionKind: 'membership_application',
+    submissionId: '22222222-2222-2222-2222-222222222222',
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.sent, false);
+});
+
 test('notification delivery records outcome without exposing credentials in the payload', async () => {
   configurePersistence();
   let call;
@@ -144,6 +178,7 @@ test('notification delivery records outcome without exposing credentials in the 
 
   assert.equal(result.ok, true);
   assert.equal(call.url, 'https://iww-test.supabase.co/rest/v1/iww_notification_deliveries');
+  assert.equal(call.options.method, 'POST');
   const body = JSON.parse(call.options.body);
   assert.equal(body.status, 'failed');
   assert.equal(body.error_code, 'workflow_unavailable');
