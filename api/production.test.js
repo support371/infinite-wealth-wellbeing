@@ -20,21 +20,10 @@ function createResponse() {
     statusCode: 200,
     body: null,
     ended: false,
-    setHeader(name, value) {
-      this.headers[name.toLowerCase()] = value;
-    },
-    status(code) {
-      this.statusCode = code;
-      return this;
-    },
-    json(body) {
-      this.body = body;
-      return this;
-    },
-    end() {
-      this.ended = true;
-      return this;
-    },
+    setHeader(name, value) { this.headers[name.toLowerCase()] = value; },
+    status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; },
+    end() { this.ended = true; return this; },
   };
 }
 
@@ -42,10 +31,7 @@ function request(method, body = undefined, headers = {}) {
   return {
     method,
     body,
-    headers: {
-      'user-agent': 'test-agent',
-      ...headers,
-    },
+    headers: { 'user-agent': 'test-agent', ...headers },
   };
 }
 
@@ -66,10 +52,8 @@ afterEach(() => {
 test('health is degraded until both workflows and signing are configured', () => {
   process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
   process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
-
   const res = createResponse();
   healthHandler(request('GET'), res);
-
   assert.equal(res.statusCode, 503);
   assert.equal(res.body.status, 'degraded');
   assert.equal(res.body.checks.workflowSigningConfigured, false);
@@ -80,10 +64,8 @@ test('health is ready when workflow URLs and signing secret exist', () => {
   process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
   process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
   process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
-
   const res = createResponse();
   healthHandler(request('GET'), res);
-
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.status, 'ready');
   assert.equal(res.body.checks.workflowSigningConfigured, true);
@@ -92,14 +74,9 @@ test('health is ready when workflow URLs and signing secret exist', () => {
 test('inquiry rejects invalid public values before delivery', async () => {
   const res = createResponse();
   await inquiryHandler(request('POST', {
-    firstName: 'Ada',
-    lastName: 'Lovelace',
-    email: 'ada@example.com',
-    subject: 'Unsupported Subject',
-    message: 'This message is long enough.',
-    consent: true,
+    firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com',
+    subject: 'Unsupported Subject', message: 'This message is long enough.', consent: true,
   }), res);
-
   assert.equal(res.statusCode, 400);
   assert.equal(res.body.error, 'validation_failed');
   assert.equal(res.body.fields.subject, 'invalid');
@@ -107,16 +84,9 @@ test('inquiry rejects invalid public values before delivery', async () => {
 
 test('inquiry honeypot returns accepted without invoking a workflow', async () => {
   let called = false;
-  global.fetch = async () => {
-    called = true;
-    return { ok: true };
-  };
-
+  global.fetch = async () => { called = true; return { ok: true }; };
   const res = createResponse();
-  await inquiryHandler(request('POST', {
-    companyWebsite: 'https://bot.example',
-  }), res);
-
+  await inquiryHandler(request('POST', { companyWebsite: 'https://bot.example' }), res);
   assert.equal(res.statusCode, 202);
   assert.equal(res.body.status, 'accepted');
   assert.equal(called, false);
@@ -125,21 +95,12 @@ test('inquiry honeypot returns accepted without invoking a workflow', async () =
 test('inquiry refuses unsigned workflow delivery', async () => {
   process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
   let called = false;
-  global.fetch = async () => {
-    called = true;
-    return { ok: true };
-  };
-
+  global.fetch = async () => { called = true; return { ok: true }; };
   const res = createResponse();
   await inquiryHandler(request('POST', {
-    firstName: 'Ada',
-    lastName: 'Lovelace',
-    email: 'ada@example.com',
-    subject: 'General Inquiry',
-    message: 'Please send more information about the organization.',
-    consent: true,
+    firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com',
+    subject: 'General Inquiry', message: 'Please send more information about the organization.', consent: true,
   }), res);
-
   assert.equal(res.statusCode, 503);
   assert.equal(res.body.error, 'workflow_not_configured');
   assert.equal(called, false);
@@ -149,21 +110,12 @@ test('valid inquiry is delivered with the workflow signing secret', async () => 
   process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
   process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
   let delivery;
-  global.fetch = async (url, options) => {
-    delivery = { url, options };
-    return { ok: true };
-  };
-
+  global.fetch = async (url, options) => { delivery = { url, options }; return { ok: true }; };
   const res = createResponse();
   await inquiryHandler(request('POST', {
-    firstName: ' Ada ',
-    lastName: ' Lovelace ',
-    email: 'ADA@EXAMPLE.COM',
-    subject: 'General Inquiry',
-    message: 'Please send more information about the organization.',
-    consent: true,
+    firstName: ' Ada ', lastName: ' Lovelace ', email: 'ADA@EXAMPLE.COM',
+    subject: 'General Inquiry', message: 'Please send more information about the organization.', consent: true,
   }), res);
-
   assert.equal(res.statusCode, 202);
   assert.match(res.body.reference, /^IWW-INQ-/);
   assert.equal(delivery.url, 'https://workflow.test/inquiry');
@@ -171,21 +123,17 @@ test('valid inquiry is delivered with the workflow signing secret', async () => 
   const payload = JSON.parse(delivery.options.body);
   assert.equal(payload.type, 'inquiry.received');
   assert.equal(payload.person.email, 'ada@example.com');
-  assert.equal(payload.consent.privacyNoticeAccepted, true);
+  assert.equal(payload.consent.submissionProcessing, true);
+  assert.equal(payload.consent.contactPermission, true);
+  assert.equal('privacyNoticeAccepted' in payload.consent, false);
 });
 
 test('membership application validates allowed tier and interest', async () => {
   const res = createResponse();
   await membershipHandler(request('POST', {
-    firstName: 'Grace',
-    lastName: 'Hopper',
-    email: 'grace@example.com',
-    tier: 'Member',
-    interest: 'Not an allowed interest',
-    introduction: 'I would like to learn more about membership.',
-    consent: true,
+    firstName: 'Grace', lastName: 'Hopper', email: 'grace@example.com', tier: 'Member',
+    interest: 'Not an allowed interest', introduction: 'I would like to learn more about membership.', consent: true,
   }), res);
-
   assert.equal(res.statusCode, 400);
   assert.equal(res.body.fields.interest, 'invalid');
 });
@@ -194,22 +142,12 @@ test('valid membership application is signed and accepted', async () => {
   process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
   process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
   let delivery;
-  global.fetch = async (url, options) => {
-    delivery = { url, options };
-    return { ok: true };
-  };
-
+  global.fetch = async (url, options) => { delivery = { url, options }; return { ok: true }; };
   const res = createResponse();
   await membershipHandler(request('POST', {
-    firstName: 'Grace',
-    lastName: 'Hopper',
-    email: 'grace@example.com',
-    tier: 'Explorer',
-    interest: 'Wealth & Financial Education',
-    introduction: 'I want a structured place to learn and participate.',
-    consent: true,
+    firstName: 'Grace', lastName: 'Hopper', email: 'grace@example.com', tier: 'Explorer',
+    interest: 'Wealth & Financial Education', introduction: 'I want a structured place to learn and participate.', consent: true,
   }), res);
-
   assert.equal(res.statusCode, 202);
   assert.match(res.body.reference, /^IWW-MEM-/);
   assert.equal(delivery.url, 'https://workflow.test/membership');
@@ -218,6 +156,8 @@ test('valid membership application is signed and accepted', async () => {
   assert.equal(payload.type, 'membership.application.received');
   assert.equal(payload.requestedTier, 'Explorer');
   assert.equal(payload.primaryInterest, 'Wealth & Financial Education');
+  assert.equal(payload.consent.applicationProcessing, true);
+  assert.equal('privacyNoticeAccepted' in payload.consent, false);
 });
 
 test('public API endpoints reject unsupported methods', async () => {
@@ -225,7 +165,6 @@ test('public API endpoints reject unsupported methods', async () => {
   await inquiryHandler(request('GET'), inquiryRes);
   assert.equal(inquiryRes.statusCode, 405);
   assert.equal(inquiryRes.headers.allow, 'POST, OPTIONS');
-
   const healthRes = createResponse();
   healthHandler(request('POST'), healthRes);
   assert.equal(healthRes.statusCode, 405);
