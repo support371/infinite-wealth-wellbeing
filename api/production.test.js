@@ -11,6 +11,10 @@ const ENV_KEYS = [
   'WORKFLOW_WEBHOOK_SECRET',
   'IWW_SUPABASE_URL',
   'IWW_SUPABASE_SERVICE_ROLE_KEY',
+  'IWW_NOTIFICATION_WORKER_SECRET',
+  'IWW_EMAIL_DELIVERY_URL',
+  'IWW_EMAIL_DELIVERY_SECRET',
+  'IWW_EMAIL_WORKER_SECRET',
   'VERCEL_ENV',
 ];
 const ORIGINAL_ENV = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
@@ -30,11 +34,7 @@ function createResponse() {
 }
 
 function request(method, body = undefined, headers = {}) {
-  return {
-    method,
-    body,
-    headers: { 'user-agent': 'test-agent', ...headers },
-  };
+  return { method, body, headers: { 'user-agent': 'test-agent', ...headers } };
 }
 
 function configurePersistence() {
@@ -42,11 +42,15 @@ function configurePersistence() {
   process.env.IWW_SUPABASE_SERVICE_ROLE_KEY = 'server-secret-test-key';
 }
 
+function configureOperationalDelivery() {
+  process.env.IWW_NOTIFICATION_WORKER_SECRET = 'notification-worker-secret';
+  process.env.IWW_EMAIL_DELIVERY_URL = 'https://email-adapter.test/deliver';
+  process.env.IWW_EMAIL_DELIVERY_SECRET = 'email-delivery-secret';
+  process.env.IWW_EMAIL_WORKER_SECRET = 'email-worker-secret';
+}
+
 function persistenceResponse(reference, submissionId) {
-  return {
-    ok: true,
-    json: async () => ({ reference, submissionId, status: 'accepted' }),
-  };
+  return { ok: true, json: async () => ({ reference, submissionId, status: 'accepted' }) };
 }
 
 function emptyNotificationResponse() {
@@ -72,6 +76,7 @@ test('health remains degraded when persistence is missing', () => {
   process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
   process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
   process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
+  configureOperationalDelivery();
   const res = createResponse();
   healthHandler(request('GET'), res);
   assert.equal(res.statusCode, 503);
@@ -86,18 +91,34 @@ test('health remains degraded when public origin is missing', () => {
   process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
   process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
   configurePersistence();
+  configureOperationalDelivery();
   const res = createResponse();
   healthHandler(request('GET'), res);
   assert.equal(res.statusCode, 503);
   assert.equal(res.body.checks.publicOriginConfigured, false);
 });
 
-test('health is ready only when workflows, origin, signing, and persistence exist', () => {
+test('health remains degraded when transactional email delivery is not configured', () => {
+  process.env.PUBLIC_APP_ORIGIN = 'https://iww.example';
+  process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
+  process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
+  process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
+  process.env.IWW_NOTIFICATION_WORKER_SECRET = 'notification-worker-secret';
+  process.env.IWW_EMAIL_WORKER_SECRET = 'email-worker-secret';
+  configurePersistence();
+  const res = createResponse();
+  healthHandler(request('GET'), res);
+  assert.equal(res.statusCode, 503);
+  assert.equal(res.body.checks.emailDeliveryConfigured, false);
+});
+
+test('health is ready only when workflows, persistence, workers, origin, and transactional email adapter exist', () => {
   process.env.PUBLIC_APP_ORIGIN = 'https://iww.example';
   process.env.INQUIRY_WEBHOOK_URL = 'https://workflow.test/inquiry';
   process.env.MEMBERSHIP_WEBHOOK_URL = 'https://workflow.test/membership';
   process.env.WORKFLOW_WEBHOOK_SECRET = 'test-secret';
   configurePersistence();
+  configureOperationalDelivery();
   const res = createResponse();
   healthHandler(request('GET'), res);
   assert.equal(res.statusCode, 200);
@@ -105,6 +126,9 @@ test('health is ready only when workflows, origin, signing, and persistence exis
   assert.equal(res.body.checks.publicOriginConfigured, true);
   assert.equal(res.body.checks.persistenceUrlConfigured, true);
   assert.equal(res.body.checks.persistenceServiceRoleConfigured, true);
+  assert.equal(res.body.checks.notificationWorkerSecretConfigured, true);
+  assert.equal(res.body.checks.emailDeliveryConfigured, true);
+  assert.equal(res.body.checks.emailWorkerSecretConfigured, true);
 });
 
 test('inquiry rejects invalid public values before persistence', async () => {
@@ -150,15 +174,9 @@ test('durably stored inquiry remains accepted when staff webhook is unavailable'
   const calls = [];
   global.fetch = async (url, options) => {
     calls.push({ url, options });
-    if (url.includes('/rpc/iww_accept_inquiry')) {
-      return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
-    }
-    if (url.includes('/iww_notification_deliveries') && options.method === 'GET') {
-      return emptyNotificationResponse();
-    }
-    if (url.includes('/iww_notification_deliveries') && options.method === 'POST') {
-      return { ok: true, json: async () => ({}) };
-    }
+    if (url.includes('/rpc/iww_accept_inquiry')) return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
+    if (url.includes('/iww_notification_deliveries') && options.method === 'GET') return emptyNotificationResponse();
+    if (url.includes('/iww_notification_deliveries') && options.method === 'POST') return { ok: true, json: async () => ({}) };
     throw new Error(`Unexpected fetch: ${url}`);
   };
 
@@ -182,9 +200,7 @@ test('valid inquiry persists, checks delivery history, sends signed webhook, the
   const calls = [];
   global.fetch = async (url, options) => {
     calls.push({ url, options });
-    if (url.includes('/rpc/iww_accept_inquiry')) {
-      return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
-    }
+    if (url.includes('/rpc/iww_accept_inquiry')) return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
     if (url.includes('/iww_notification_deliveries') && options.method === 'GET') return emptyNotificationResponse();
     if (url === 'https://workflow.test/inquiry') return { ok: true, json: async () => ({}) };
     if (url.includes('/iww_notification_deliveries') && options.method === 'POST') return { ok: true, json: async () => ({}) };
@@ -219,12 +235,8 @@ test('inquiry replay skips duplicate staff webhook after a successful delivery r
   const calls = [];
   global.fetch = async (url, options) => {
     calls.push({ url, options });
-    if (url.includes('/rpc/iww_accept_inquiry')) {
-      return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
-    }
-    if (url.includes('/iww_notification_deliveries') && options.method === 'GET') {
-      return { ok: true, json: async () => [{ id: 'delivery-1' }] };
-    }
+    if (url.includes('/rpc/iww_accept_inquiry')) return persistenceResponse('IWW-INQ-ABC123', '11111111-1111-1111-1111-111111111111');
+    if (url.includes('/iww_notification_deliveries') && options.method === 'GET') return { ok: true, json: async () => [{ id: 'delivery-1' }] };
     throw new Error(`Unexpected fetch: ${url}`);
   };
 
@@ -260,9 +272,7 @@ test('valid membership application persists first and uses stored reference', as
   const calls = [];
   global.fetch = async (url, options) => {
     calls.push({ url, options });
-    if (url.includes('/rpc/iww_accept_membership_application')) {
-      return persistenceResponse('IWW-MEM-XYZ789', '22222222-2222-2222-2222-222222222222');
-    }
+    if (url.includes('/rpc/iww_accept_membership_application')) return persistenceResponse('IWW-MEM-XYZ789', '22222222-2222-2222-2222-222222222222');
     if (url.includes('/iww_notification_deliveries') && options.method === 'GET') return emptyNotificationResponse();
     if (url === 'https://workflow.test/membership') return { ok: true, json: async () => ({}) };
     if (url.includes('/iww_notification_deliveries') && options.method === 'POST') return { ok: true, json: async () => ({}) };
