@@ -45,10 +45,13 @@ with required_functions(signature) as (
     ('public.iww_accept_inquiry(text,text,text,text,text,text,text,text,jsonb,text)'),
     ('public.iww_accept_membership_application(text,text,text,text,text,text,text,text,text,jsonb,text)'),
     ('public.iww_transition_submission(text,uuid,iww_submission_status,uuid,text,text)'),
+    ('public.iww_bootstrap_admin(uuid)'),
+    ('public.iww_set_staff_role(uuid,uuid,iww_user_role,boolean)'),
     ('public.iww_claim_notification_batch(integer)'),
     ('public.iww_finish_notification_attempt(uuid,boolean,text)'),
     ('public.iww_claim_email_batch(integer)'),
-    ('public.iww_finish_email_attempt(uuid,boolean,text)')
+    ('public.iww_finish_email_attempt(uuid,boolean,text)'),
+    ('public.iww_operational_snapshot()')
 )
 select
   signature,
@@ -106,7 +109,10 @@ where status = 'processing'
   and locked_at < now() - interval '10 minutes'
 order by locked_at asc;
 
--- 7) Evidence tables should remain queryable. Counts are informational only.
+-- 7) Operational snapshot should remain callable and contain aggregate health only.
+select public.iww_operational_snapshot() as operational_snapshot;
+
+-- 8) Evidence tables should remain queryable. Counts are informational only.
 select 'inquiries' as evidence_type, count(*)::bigint as row_count from public.iww_inquiries
 union all
 select 'membership_applications', count(*)::bigint from public.iww_membership_applications
