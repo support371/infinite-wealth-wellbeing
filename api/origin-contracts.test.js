@@ -18,9 +18,7 @@ afterEach(() => {
 
 function response() {
   return {
-    headers: {},
-    statusCode: 200,
-    body: null,
+    headers: {}, statusCode: 200, body: null,
     setHeader(name, value) { this.headers[name.toLowerCase()] = value; },
     status(code) { this.statusCode = code; return this; },
     json(body) { this.body = body; return this; },
@@ -28,15 +26,8 @@ function response() {
   };
 }
 
-function request(origin, body = {}) {
-  return {
-    method: 'POST',
-    body,
-    headers: {
-      origin,
-      'user-agent': 'origin-test',
-    },
-  };
+function request(origin, body = {}, method = 'POST') {
+  return { method, body, headers: { origin, 'user-agent': 'origin-test' } };
 }
 
 test('shared submission contracts are unique and bounded', () => {
@@ -73,4 +64,14 @@ test('configured browser origin is accepted into normal validation flow', async 
   assert.equal(res.statusCode, 400);
   assert.equal(res.body.error, 'validation_failed');
   assert.equal(res.headers['access-control-allow-origin'], 'https://iww.example');
+});
+
+test('allowed-origin preflight advertises Authorization PATCH and public form headers', async () => {
+  process.env.PUBLIC_APP_ORIGIN = 'https://iww.example';
+  const res = response();
+  await inquiryHandler(request('https://iww.example', {}, 'OPTIONS'), res);
+  assert.equal(res.statusCode, 204);
+  assert.equal(res.headers['access-control-allow-origin'], 'https://iww.example');
+  assert.equal(res.headers['access-control-allow-methods'], 'GET,POST,PATCH,OPTIONS');
+  assert.equal(res.headers['access-control-allow-headers'], 'Authorization,Content-Type,Idempotency-Key');
 });
