@@ -10,13 +10,13 @@ import {
   requestMetadata,
   requireAllowedOrigin,
   requirePost,
-} from './_lib/http.js';
+} from '../server/http.js';
 import {
   hasSuccessfulNotification,
   persistInquiry,
   readIdempotencyKey,
   recordNotificationDelivery,
-} from './_lib/persistence.js';
+} from '../server/persistence.js';
 
 const ALLOWED_SUBJECTS = new Set(CONTACT_SUBJECTS);
 
