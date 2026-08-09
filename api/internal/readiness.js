@@ -1,15 +1,12 @@
 import { applySecurityHeaders } from '../../server/http.js';
 import { internalBearerMatches } from '../../server/internal-auth.js';
+import { emailDeliveryConfigured } from '../../server/email-adapter.js';
 import { getSupabaseServerConfig, supabaseServiceRequest } from '../../server/supabase-server.js';
 
 async function tableReachable(table, select) {
   const query = new URLSearchParams({ select, limit: '1' });
   const result = await supabaseServiceRequest(`/rest/v1/${table}?${query.toString()}`);
-  return {
-    ok: result.ok,
-    status: result.status || null,
-    error: result.ok ? null : result.error,
-  };
+  return { ok: result.ok, status: result.status || null, error: result.ok ? null : result.error };
 }
 
 export default async function handler(req, res) {
@@ -32,6 +29,8 @@ export default async function handler(req, res) {
     workflowSigningConfigured: Boolean(process.env.WORKFLOW_WEBHOOK_SECRET),
     persistenceConfigured: Boolean(getSupabaseServerConfig()),
     notificationWorkerSecretConfigured: Boolean(process.env.IWW_NOTIFICATION_WORKER_SECRET),
+    emailDeliveryConfigured: emailDeliveryConfigured(),
+    emailWorkerSecretConfigured: Boolean(process.env.IWW_EMAIL_WORKER_SECRET),
   };
 
   const databaseChecks = configChecks.persistenceConfigured
@@ -58,10 +57,7 @@ export default async function handler(req, res) {
 
   return res.status(ready ? 200 : 503).json({
     status: ready ? 'ready' : 'degraded',
-    checks: {
-      configuration: configChecks,
-      database: databaseChecks,
-    },
+    checks: { configuration: configChecks, database: databaseChecks },
     timestamp: new Date().toISOString(),
   });
 }
