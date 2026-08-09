@@ -13,11 +13,16 @@ export default function handler(req, res) {
     membershipWorkflowConfigured: Boolean(process.env.MEMBERSHIP_WEBHOOK_URL),
     workflowSigningConfigured: Boolean(process.env.WORKFLOW_WEBHOOK_SECRET),
     publicOriginConfigured: Boolean(process.env.PUBLIC_APP_ORIGIN),
+    persistenceUrlConfigured: Boolean(process.env.IWW_SUPABASE_URL),
+    persistenceServiceRoleConfigured: Boolean(process.env.IWW_SUPABASE_SERVICE_ROLE_KEY),
   };
 
   const ready = checks.inquiryWorkflowConfigured
     && checks.membershipWorkflowConfigured
-    && checks.workflowSigningConfigured;
+    && checks.workflowSigningConfigured
+    && checks.publicOriginConfigured
+    && checks.persistenceUrlConfigured
+    && checks.persistenceServiceRoleConfigured;
 
   return res.status(ready ? 200 : 503).json({
     status: ready ? 'ready' : 'degraded',
