@@ -9,7 +9,7 @@ export function applySecurityHeaders(req, res) {
     res.setHeader('Vary', 'Origin');
   }
 
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Idempotency-Key');
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -66,7 +66,7 @@ export function requestMetadata(req) {
 }
 
 export async function forwardWebhook(url, payload, secret) {
-  if (!url) {
+  if (!url || !secret) {
     return { ok: false, status: 503, error: 'workflow_not_configured' };
   }
 
@@ -78,7 +78,7 @@ export async function forwardWebhook(url, payload, secret) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(secret ? { 'X-IWW-Webhook-Secret': secret } : {}),
+        'X-IWW-Webhook-Secret': secret,
       },
       body: JSON.stringify(payload),
       signal: controller.signal,
