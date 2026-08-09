@@ -29,8 +29,7 @@ jobs:
         run: npm install --no-fund --no-audit
 
       - name: Run every production test
-        shell: bash
-        run: node --test api/*.test.js
+        run: npm run test:production
 
       - name: Build all configured Vite entrypoints
         run: npm run build
@@ -38,12 +37,14 @@ jobs:
       - name: Verify expected release output
         shell: bash
         run: |
+          test -f dist/index.html
           test -f dist/prelaunch.html
           test -f dist/contact.html
           test -f dist/membership-apply.html
           test -f dist/donate.html
           test -f dist/trust-center.html
           test -f dist/admin.html
+          test -f dist/admin-history.html
           test -d dist/assets
 
       - name: Print release gate status
