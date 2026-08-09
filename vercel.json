@@ -25,7 +25,7 @@
     },
     {
       "source": "/((?!api|_next|.*\\..*).*)",
-      "destination": "/index.html"
+      "destination": "/prelaunch.html"
     }
   ],
   "headers": [
@@ -60,6 +60,19 @@
         {
           "key": "Cache-Control",
           "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
         }
       ]
     }
