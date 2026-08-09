@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   addQueueItem,
   addToIncubator,
+  blockWithReason,
+  blockedItems,
   canPromoteFromIncubator,
   closeDay,
   completeWithEvidence,
@@ -17,6 +19,7 @@ import {
   promoteIncubatorItem,
   resetState,
   reviewPrinciple,
+  unblockItem,
 } from './engine.js';
 
 const fixedDate = new Date('2026-08-09T08:00:00.000Z');
@@ -45,6 +48,15 @@ test('the daily gate must open before execution is presented', () => {
   assert.equal(getRequiredAction(state, fixedDate).kind, 'execute');
 });
 
+test('opening a new date preserves a stale open session as interrupted', () => {
+  let state = resetState();
+  state = openDay(state, 'Day one', new Date('2026-08-08T08:00:00.000Z'));
+  state = openDay(state, 'Day two', new Date('2026-08-09T08:00:00.000Z'));
+  assert.equal(state.dailySessions.length, 1);
+  assert.equal(state.dailySessions[0].status, 'interrupted');
+  assert.equal(state.currentSession.openingIntent, 'Day two');
+});
+
 test('completion requires evidence and promotes next work', () => {
   let state = resetState();
   state = addQueueItem(state, { title: 'First', stage: 'now' });
@@ -71,6 +83,31 @@ test('override defers active work, records reason, and advances the queue', () =
   assert.equal(state.queue.find((item) => item.id === primary.id).stage, 'later');
   assert.equal(normalizeQueue(state.queue)[0].title, 'Secondary');
   assert.equal(normalizeQueue(state.queue)[0].stage, 'now');
+});
+
+test('deferring the only active item does not silently reactivate it', () => {
+  let state = resetState();
+  state = addQueueItem(state, { title: 'Only item', stage: 'now' });
+  const item = normalizeQueue(state.queue)[0];
+  state = deferWithOverride(state, item.id, 'Deliberate defer');
+  assert.equal(normalizeQueue(state.queue).some((entry) => entry.stage === 'now'), false);
+});
+
+test('blocked work leaves execution until explicitly unblocked', () => {
+  let state = resetState();
+  state = addQueueItem(state, { title: 'Waiting on vendor', stage: 'now' });
+  state = addQueueItem(state, { title: 'Independent work', stage: 'next' });
+  const waiting = normalizeQueue(state.queue)[0];
+
+  state = blockWithReason(state, waiting.id, 'Vendor API credentials unavailable');
+  assert.equal(blockedItems(state.queue).length, 1);
+  assert.equal(blockedItems(state.queue)[0].blockReason, 'Vendor API credentials unavailable');
+  assert.equal(normalizeQueue(state.queue)[0].title, 'Independent work');
+  assert.equal(normalizeQueue(state.queue)[0].stage, 'now');
+
+  state = unblockItem(state, waiting.id);
+  assert.equal(blockedItems(state.queue).length, 0);
+  assert.equal(state.queue.find((entry) => entry.id === waiting.id).stage, 'next');
 });
 
 test('exploration cannot jump an active mission', () => {
