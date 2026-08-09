@@ -1,11 +1,10 @@
 import { timingSafeEqual } from 'node:crypto';
-import { applySecurityHeaders } from '../_lib/http.js';
-import { forwardWebhook } from '../_lib/http.js';
+import { applySecurityHeaders, forwardWebhook } from '../../server/http.js';
 import {
   hasSuccessfulNotification,
   recordNotificationDelivery,
-} from '../_lib/persistence.js';
-import { supabaseServiceRequest } from '../_lib/supabase-server.js';
+} from '../../server/persistence.js';
+import { supabaseServiceRequest } from '../../server/supabase-server.js';
 
 function secretMatches(req) {
   const configured = process.env.IWW_NOTIFICATION_WORKER_SECRET;
