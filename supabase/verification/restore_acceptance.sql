@@ -80,7 +80,25 @@ left join pg_trigger t
   on t.tgname = r.trigger_name
 order by r.trigger_name;
 
--- 5) Detect stuck staff-notification work older than the worker lock timeout.
+-- 5) Active privileged staff roles must still have at least one verified Auth MFA factor.
+select
+  r.user_id,
+  r.role,
+  r.granted_at
+from public.iww_user_roles r
+where r.role in ('reviewer'::public.iww_user_role, 'admin'::public.iww_user_role)
+  and r.revoked_at is null
+  and not exists (
+    select 1
+      from auth.mfa_factors f
+     where f.user_id = r.user_id
+       and f.status = 'verified'
+  )
+order by r.role, r.granted_at;
+
+-- Expected result: zero rows.
+
+-- 6) Detect stuck staff-notification work older than the worker lock timeout.
 select
   id,
   submission_kind,
@@ -94,7 +112,7 @@ where status = 'processing'
   and locked_at < now() - interval '10 minutes'
 order by locked_at asc;
 
--- 6) Detect stuck transactional-email work older than the worker lock timeout.
+-- 7) Detect stuck transactional-email work older than the worker lock timeout.
 select
   id,
   submission_kind,
@@ -109,10 +127,10 @@ where status = 'processing'
   and locked_at < now() - interval '10 minutes'
 order by locked_at asc;
 
--- 7) Operational snapshot should remain callable and contain aggregate health only.
+-- 8) Operational snapshot should remain callable and contain aggregate health only.
 select public.iww_operational_snapshot() as operational_snapshot;
 
--- 8) Evidence tables should remain queryable. Counts are informational only.
+-- 9) Evidence tables should remain queryable. Counts are informational only.
 select 'inquiries' as evidence_type, count(*)::bigint as row_count from public.iww_inquiries
 union all
 select 'membership_applications', count(*)::bigint from public.iww_membership_applications
