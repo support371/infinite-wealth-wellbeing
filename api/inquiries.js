@@ -11,6 +11,11 @@ import {
   requireAllowedOrigin,
   requirePost,
 } from './_lib/http.js';
+import {
+  persistInquiry,
+  readIdempotencyKey,
+  recordNotificationDelivery,
+} from './_lib/persistence.js';
 
 const ALLOWED_SUBJECTS = new Set(CONTACT_SUBJECTS);
 
@@ -46,17 +51,48 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'validation_failed', fields: errors });
   }
 
+  const idempotencyKey = readIdempotencyKey(req);
+  if (!idempotencyKey) {
+    return res.status(400).json({ error: 'idempotency_key_required' });
+  }
+
+  const metadata = requestMetadata(req);
+  const person = { firstName, lastName, email };
+  const persisted = await persistInquiry({
+    idempotencyKey,
+    person,
+    subject,
+    message,
+    metadata,
+  });
+
+  if (!persisted.ok) {
+    return res.status(persisted.status).json({
+      error: persisted.error,
+      message: 'The submission could not be stored safely. Please try again later.',
+    });
+  }
+
+  const stored = Array.isArray(persisted.data) ? persisted.data[0] : persisted.data;
+  if (!stored?.reference || !stored?.submissionId) {
+    return res.status(502).json({
+      error: 'persistence_invalid_response',
+      message: 'The submission store returned an invalid acknowledgement.',
+    });
+  }
+
   const payload = {
     type: 'inquiry.received',
-    reference: `IWW-INQ-${Date.now()}`,
-    person: { firstName, lastName, email },
+    reference: stored.reference,
+    submissionId: stored.submissionId,
+    person,
     subject,
     message,
     consent: {
       submissionProcessing: true,
       contactPermission: true,
     },
-    metadata: requestMetadata(req),
+    metadata,
   };
 
   const delivered = await forwardWebhook(
@@ -65,12 +101,15 @@ export default async function handler(req, res) {
     process.env.WORKFLOW_WEBHOOK_SECRET,
   );
 
-  if (!delivered.ok) {
-    return res.status(delivered.status).json({
-      error: delivered.error,
-      message: 'The inquiry workflow is not available. Please contact the organization directly.',
-    });
-  }
+  await recordNotificationDelivery({
+    submissionKind: 'inquiry',
+    submissionId: stored.submissionId,
+    delivered,
+  });
 
-  return res.status(202).json({ status: 'accepted', reference: payload.reference });
+  return res.status(202).json({
+    status: 'accepted',
+    reference: stored.reference,
+    staffNotification: delivered.ok ? 'sent' : 'degraded',
+  });
 }
