@@ -51,11 +51,11 @@
     },
     {
       "id": "transactional_email",
-      "title": "Transactional email queue and delivery audit",
+      "title": "Transactional email queue, worker, adapter boundary, and delivery audit",
       "status": "prepared",
       "requiredForLaunch": true,
-      "evidence": ["supabase/migrations/20260809069000_iww_transactional_email_outbox.sql", "api/email-outbox-model.test.js", "ops/TRANSACTIONAL_EMAIL_CONTRACT.md", "supabase/migrations/20260809060000_iww_production_core.sql"],
-      "blocker": "Durable provider-neutral queueing is prepared; a verified sender domain, provider adapter, approved template copy, worker configuration, and live delivery/retry evidence remain required."
+      "evidence": ["supabase/migrations/20260809069000_iww_transactional_email_outbox.sql", "server/email-adapter.js", "api/internal/email-worker.js", "api/email-outbox-model.test.js", "api/email-worker.test.js", "ops/TRANSACTIONAL_EMAIL_CONTRACT.md"],
+      "blocker": "Queue/worker/adapter contracts are prepared; a verified sender domain, approved provider-facing adapter, approved template copy, scheduler configuration, and live signed delivery/retry evidence remain required."
     },
     {
       "id": "admin_review",
@@ -79,7 +79,7 @@
       "status": "prepared",
       "requiredForLaunch": true,
       "evidence": ["api/internal/readiness.js", "api/readiness.test.js", "ops/PRODUCTION_ENVIRONMENT.md"],
-      "blocker": "The probe cannot return live ready until the dedicated database schema, workflow secrets, origin, worker configuration, and both durable outbox tables are activated."
+      "blocker": "The probe cannot return live ready until the dedicated database schema, workflow secrets, origin, both worker secrets, email adapter signing configuration, and both durable outbox tables are activated."
     },
     {
       "id": "abuse_protection",
@@ -127,7 +127,7 @@
       "status": "prepared",
       "requiredForLaunch": true,
       "evidence": ["server/", "api/function-budget.test.js", "vercel.json"],
-      "blocker": "Shared helpers have been moved outside api/ and the source budget is nine handlers; a fresh successful Vercel deployment is required to verify the provider-side function count."
+      "blocker": "Shared helpers live outside api/ and the source budget is ten intentional handlers, below the Hobby cap of twelve; a fresh successful Vercel deployment is required to verify provider-side counting."
     },
     {
       "id": "ci_deploy_evidence",
@@ -135,7 +135,7 @@
       "status": "in_progress",
       "requiredForLaunch": true,
       "evidence": [".github/workflows/production-ci.yml", ".github/workflows/production-completion-ci.yml", "vercel.json", "package.json"],
-      "blocker": "Vercel has proven the full test/build phase can succeed, but the latest post-refactor head still needs a clean deployment and GitHub CI evidence remains inconsistent."
+      "blocker": "Vercel previously proved the full test/build phase can succeed; current head deployments are temporarily build-rate-limited, and GitHub Actions jobs are still failing before any steps begin."
     },
     {
       "id": "e2e_accessibility_security",
