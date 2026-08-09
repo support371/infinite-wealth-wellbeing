@@ -26,6 +26,9 @@ Apply in a non-production IWW environment first:
 5. `20260809064000_iww_notification_outbox.sql`
 6. `20260809065000_iww_outbox_delivery_guard.sql`
 7. `20260809066000_iww_staff_role_management.sql`
+8. `20260809067000_iww_staff_role_evidence_guard.sql`
+9. `20260809068000_iww_intake_throttle.sql`
+10. `20260809069000_iww_transactional_email_outbox.sql`
 
 Then verify:
 
@@ -37,9 +40,11 @@ Then verify:
 - atomic intake returns a stable reference and writes consent/status/audit evidence;
 - idempotency replay returns the same acknowledgement;
 - same key + changed content is rejected;
+- intake throttle blocks excessive repeated-email submissions without storing IP addresses;
 - staff status transition state machine rejects invalid jumps;
-- outbox claim uses concurrency-safe locking;
-- delivered outbox state requires successful delivery evidence.
+- staff-role bootstrap/management guards preserve at least one active admin;
+- both outbox claim paths use concurrency-safe locking;
+- staff and email delivered states require matching durable delivery evidence.
 
 Run database/security advisors after migration and resolve findings before proceeding.
 
@@ -72,6 +77,9 @@ Server/runtime:
 - `MEMBERSHIP_WEBHOOK_URL`
 - `WORKFLOW_WEBHOOK_SECRET`
 - `IWW_NOTIFICATION_WORKER_SECRET`
+- `IWW_EMAIL_WORKER_SECRET`
+- `IWW_EMAIL_DELIVERY_URL`
+- `IWW_EMAIL_DELIVERY_SECRET`
 
 Browser-safe staff build:
 
@@ -92,9 +100,9 @@ Verify no protected value is present in the client bundle.
 
 **Evidence:** successful signed test, receiver log/reference match.
 
-## Phase 6 — Activate the durable outbox worker
+## Phase 6 — Activate the durable staff-notification worker
 
-The protected worker endpoint is:
+Protected endpoint:
 
 `POST /api/internal/notification-worker`
 
@@ -110,28 +118,61 @@ Worker behavior:
 - recovers stale processing locks;
 - skips already-successful deliveries;
 - reconstructs the notification from durable data;
-- records every delivery attempt;
+- records every delivery attempt with the actual retry number;
 - retries with bounded exponential backoff;
 - dead-letters after repeated failure;
 - cannot mark delivered without durable successful-delivery evidence.
 
 **Evidence:** scheduler configuration, successful worker invocation, retry/dead-letter drill.
 
-## Phase 7 — Run deep readiness
+## Phase 7 — Approve and activate transactional email
+
+Use `ops/TRANSACTIONAL_EMAIL_CONTRACT.md`.
+
+Before enabling delivery:
+
+1. Approve the verified sender domain/address.
+2. Approve exact copy for `inquiry_received_v1` and `membership_application_received_v1`.
+3. Configure the provider or provider-facing adapter behind `IWW_EMAIL_DELIVERY_URL`.
+4. Configure the matching `IWW_EMAIL_DELIVERY_SECRET` at both IWW and the adapter.
+5. Confirm the adapter rejects unsigned/incorrectly signed requests.
+6. Confirm the adapter honors the stable `Idempotency-Key` supplied by IWW.
+7. Configure `IWW_EMAIL_WORKER_SECRET` for the worker endpoint.
+
+Protected endpoint:
+
+`POST /api/internal/email-worker`
+
+Authentication:
+
+`Authorization: Bearer <IWW_EMAIL_WORKER_SECRET>`
+
+Worker behavior:
+
+- claims a bounded email batch with `SKIP LOCKED` semantics;
+- sends only a template key, recipient, stable reference, submission kind/ID, and outbox idempotency key to the adapter;
+- never sends user message/introduction content to the email adapter;
+- records provider/message evidence and real attempt number;
+- retries/dead-letters according to the database queue;
+- cannot finalize delivery when the durable email delivery record is missing.
+
+**Evidence:** verified sender, approved template versions, signed-adapter negative test, successful controlled delivery, provider message ID, retry/dead-letter drill, duplicate/idempotency drill.
+
+## Phase 8 — Run deep readiness
 
 Protected endpoint:
 
 `GET /api/internal/readiness`
 
-Use the worker/internal bearer secret.
+Use `IWW_NOTIFICATION_WORKER_SECRET` as the internal-readiness bearer secret.
 
-The probe verifies both protected configuration and live access to required IWW tables including intake, roles, audit, and notification outbox.
+The probe verifies protected configuration and live access to required IWW tables including intake, roles, audit, staff-notification outbox, and transactional-email outbox.
 
 A 200 response is necessary but not sufficient for launch.
 
 **Evidence:** saved readiness response with timestamp, secrets removed.
 
-## Phase 8 — Execute public-intake failure drills
+## Phase 9 — Execute public-intake failure drills
 
 ### Normal inquiry
 
@@ -141,14 +182,16 @@ A 200 response is necessary but not sufficient for launch.
 - verify two consent records;
 - verify initial status event;
 - verify audit event;
-- verify staff notification record.
+- verify staff notification record;
+- verify confirmation-email outbox row.
 
 ### Exact retry
 
 - replay the same payload with the same idempotency key;
 - confirm same durable reference;
 - confirm no duplicate submission;
-- confirm no duplicate successful staff webhook.
+- confirm no duplicate successful staff webhook;
+- confirm no duplicate confirmation-email outbox item.
 
 ### Changed-content retry
 
@@ -165,13 +208,22 @@ A 200 response is necessary but not sufficient for launch.
 - run worker;
 - confirm eventual delivery and evidence history.
 
+### Email adapter outage
+
+- temporarily make the approved email adapter unavailable in non-production;
+- confirm the email outbox remains queued after a failed attempt;
+- restore adapter;
+- invoke worker;
+- confirm eventual durable delivery evidence and outbox completion;
+- verify the adapter idempotency key prevents an intentional duplicate send on replay.
+
 ### Membership application
 
 Repeat equivalent checks for `/membership/apply`; verify no payment/subscription activation occurs.
 
 **Evidence:** references, row counts, status/audit/delivery history, screenshots/logs where appropriate.
 
-## Phase 9 — Exercise staff review
+## Phase 10 — Exercise staff review
 
 1. Sign in as reviewer.
 2. Confirm queue visibility.
@@ -183,21 +235,25 @@ Repeat equivalent checks for `/membership/apply`; verify no payment/subscription
 
 **Evidence:** transition audit history and negative-access tests.
 
-## Phase 10 — Backup, restore, retention, and deletion
+## Phase 11 — Backup, restore, retention, and deletion
+
+Use `ops/BACKUP_RECOVERY_RUNBOOK.md` and `supabase/verification/restore_acceptance.sql`.
 
 Before live data:
 
-- approve the retention/deletion policy;
-- configure provider backup/recovery;
-- restore a non-production backup and verify IWW tables/RLS/functions;
-- define deletion/anonymization rules for inquiries, applications, consent, audit, and memberships;
-- do not delete audit or consent evidence merely to simplify implementation without policy review.
+- approve RPO/RTO and retention/deletion policy;
+- configure provider backup/PITR/recovery;
+- restore an isolated non-production backup;
+- run the read-only restore acceptance suite;
+- verify IWW tables, RLS, anon revocation, RPCs, triggers, outboxes, and authorization after restore;
+- do not replay external staff/email deliveries from a restore drill;
+- do not delete substantive audit/consent data without approved policy/legal rules.
 
-The only automated deletion currently prepared is expired idempotency-key cleanup, because those rows carry an explicit `expires_at`.
+The only automated deletion currently prepared is expired idempotency-key cleanup because those rows carry an explicit `expires_at`.
 
-**Evidence:** approved policy, restore drill, recovery time/result, deletion test.
+**Evidence:** approved policy/objectives, provider backup configuration, restore drill output, observed recovery point/time, post-drill cleanup evidence.
 
-## Phase 11 — Policy and public-claim release
+## Phase 12 — Policy and public-claim release
 
 Use `PUBLIC_CLAIM_AUDIT.md`.
 
@@ -207,18 +263,20 @@ Re-enable public domains one at a time; do not globally remove the pre-launch ga
 
 **Evidence:** claim inventory, substantiation, reviewer/owner, route approval.
 
-## Phase 12 — Final technical evidence
+## Phase 13 — Final technical evidence
 
 Complete:
 
 - all repository tests;
 - production build;
+- source and provider function-budget verification;
 - live route smoke tests;
 - mobile layout checks;
 - keyboard/screen-reader/accessibility review;
 - performance review;
 - security review;
 - origin/auth/role negative tests;
+- staff/email retry and dead-letter tests;
 - backup/recovery evidence;
 - provider CI/deployment evidence.
 
@@ -231,13 +289,13 @@ npm run release:strict
 
 Do not launch while `release:strict` has required blockers.
 
-## Phase 13 — Release decision
+## Phase 14 — Release decision
 
 Release only when:
 
 - required machine-readable gates are `implemented` or `verified`;
 - protected production configuration exists;
-- durable persistence and staff operations are live-tested;
+- durable persistence, staff operations, and transactional email are live-tested;
 - policy/claim release is approved;
 - monitoring/recovery ownership is assigned;
 - production deploy evidence is saved.
