@@ -1,6 +1,6 @@
-import { applySecurityHeaders, cleanText, getBody, handleOptions, requireAllowedOrigin } from '../_lib/http.js';
-import { authenticateStaff, sendStaffAuthError } from '../_lib/staff-auth.js';
-import { supabaseServiceRequest } from '../_lib/supabase-server.js';
+import { applySecurityHeaders, cleanText, getBody, handleOptions, requireAllowedOrigin } from '../../server/http.js';
+import { authenticateStaff, sendStaffAuthError } from '../../server/staff-auth.js';
+import { supabaseServiceRequest } from '../../server/supabase-server.js';
 
 const KINDS = new Set(['inquiry', 'membership_application']);
 const STATUSES = new Set(['received', 'triaged', 'in_review', 'approved', 'rejected', 'closed', 'spam']);
