@@ -4,6 +4,7 @@ import { supabaseServiceRequest } from '../../server/supabase-server.js';
 
 const KINDS = new Set(['inquiry', 'membership_application']);
 const STATUSES = new Set(['received', 'triaged', 'in_review', 'approved', 'rejected', 'closed', 'spam']);
+const TERMINAL_REASON_STATUSES = new Set(['approved', 'rejected', 'closed', 'spam']);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function queryValue(req, name) {
@@ -11,11 +12,8 @@ function queryValue(req, name) {
   if (Array.isArray(direct)) return direct[0] || '';
   if (typeof direct === 'string') return direct;
   if (typeof req?.url === 'string') {
-    try {
-      return new URL(req.url, 'https://iww.local').searchParams.get(name) || '';
-    } catch {
-      return '';
-    }
+    try { return new URL(req.url, 'https://iww.local').searchParams.get(name) || ''; }
+    catch { return ''; }
   }
   return '';
 }
@@ -35,6 +33,8 @@ function mapTransitionError(result) {
   const message = String(result?.data?.message || '');
   if (message.includes('submission_not_found')) return { status: 404, error: 'submission_not_found' };
   if (message.includes('invalid_status_transition')) return { status: 409, error: 'invalid_status_transition' };
+  if (message.includes('status_reason_required')) return { status: 400, error: 'status_reason_required' };
+  if (message.includes('status_reason_too_long')) return { status: 400, error: 'status_reason_too_long' };
   if (message.includes('invalid_submission_kind')) return { status: 400, error: 'invalid_submission_kind' };
   if (message.includes('actor_not_staff')) return { status: 403, error: 'staff_role_required' };
   return { status: result?.status || 502, error: 'review_update_failed' };
@@ -49,17 +49,11 @@ async function listSubmissions(req, res) {
   if (!KINDS.has(kind)) return res.status(400).json({ error: 'invalid_submission_kind' });
   if (status && !STATUSES.has(status)) return res.status(400).json({ error: 'invalid_status' });
 
-  const query = new URLSearchParams({
-    select: selectFor(kind),
-    order: 'created_at.desc',
-    limit: String(limit),
-  });
+  const query = new URLSearchParams({ select: selectFor(kind), order: 'created_at.desc', limit: String(limit) });
   if (status) query.set('status', `eq.${status}`);
 
   const result = await supabaseServiceRequest(`/rest/v1/${tableFor(kind)}?${query.toString()}`);
-  if (!result.ok) {
-    return res.status(result.status || 502).json({ error: 'review_queue_unavailable' });
-  }
+  if (!result.ok) return res.status(result.status || 502).json({ error: 'review_queue_unavailable' });
 
   return res.status(200).json({
     kind,
@@ -81,6 +75,9 @@ async function transitionSubmission(req, res, staff) {
   if (!KINDS.has(kind)) return res.status(400).json({ error: 'invalid_submission_kind' });
   if (!UUID_RE.test(submissionId)) return res.status(400).json({ error: 'invalid_submission_id' });
   if (!STATUSES.has(toStatus)) return res.status(400).json({ error: 'invalid_status' });
+  if (TERMINAL_REASON_STATUSES.has(toStatus) && !reason) {
+    return res.status(400).json({ error: 'status_reason_required' });
+  }
 
   const result = await supabaseServiceRequest('/rest/v1/rpc/iww_transition_submission', {
     method: 'POST',
