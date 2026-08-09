@@ -15,7 +15,23 @@ test('Vercel build runs production tests before bundle build', () => {
   assert.equal(config.buildCommand, 'npm run test:production && npm run build');
 });
 
-test('public clean routes fail safely to the prelaunch shell', () => {
+test('production test script discovers every top-level API test file', () => {
+  const pkg = json('package.json');
+  assert.equal(pkg.scripts['test:production'], 'node --test api/*.test.js');
+});
+
+test('staff client dependency is declared without exposing service-role credentials to browser source', () => {
+  const pkg = json('package.json');
+  assert.ok(pkg.dependencies['@supabase/supabase-js']);
+  const adminSource = text('src/admin/AdminApp.jsx');
+  const historySource = text('src/admin/HistoryApp.jsx');
+  assert.equal(adminSource.includes('IWW_SUPABASE_SERVICE_ROLE_KEY'), false);
+  assert.equal(historySource.includes('IWW_SUPABASE_SERVICE_ROLE_KEY'), false);
+  assert.match(adminSource, /VITE_IWW_SUPABASE_PUBLISHABLE_KEY/);
+  assert.match(historySource, /VITE_IWW_SUPABASE_PUBLISHABLE_KEY/);
+});
+
+test('public clean routes fail safely to the prelaunch shell while staff routes resolve explicitly', () => {
   const config = json('vercel.json');
   const rewrites = Object.fromEntries(config.rewrites.map((entry) => [entry.source, entry.destination]));
   assert.equal(rewrites['/contact'], '/contact.html');
@@ -23,7 +39,29 @@ test('public clean routes fail safely to the prelaunch shell', () => {
   assert.equal(rewrites['/donate'], '/donate.html');
   assert.equal(rewrites['/trust-center'], '/trust-center.html');
   assert.equal(rewrites['/trust-center/:path*'], '/trust-center.html');
+  assert.equal(rewrites['/admin'], '/admin.html');
+  assert.equal(rewrites['/admin/history'], '/admin-history.html');
   assert.equal(rewrites['/((?!api|_next|.*\\..*).*)'], '/prelaunch.html');
+});
+
+test('staff routes use private no-store noindex no-referrer and deny framing', () => {
+  const config = json('vercel.json');
+  for (const source of ['/admin', '/admin/(.*)']) {
+    const entry = config.headers.find((item) => item.source === source);
+    assert.ok(entry, `missing protected headers for ${source}`);
+    const headers = Object.fromEntries(entry.headers.map((header) => [header.key.toLowerCase(), header.value]));
+    assert.match(headers['x-robots-tag'], /noindex/);
+    assert.match(headers['cache-control'], /private/);
+    assert.match(headers['cache-control'], /no-store/);
+    assert.equal(headers['x-frame-options'], 'DENY');
+    assert.equal(headers['referrer-policy'], 'no-referrer');
+  }
+});
+
+test('Vite build includes both staff entrypoints', () => {
+  const vite = text('vite.config.js');
+  assert.match(vite, /admin:\s*resolve\(process\.cwd\(\), 'admin\.html'\)/);
+  assert.match(vite, /adminHistory:\s*resolve\(process\.cwd\(\), 'admin-history\.html'\)/);
 });
 
 test('legacy SPA is explicitly prevented from being indexed as the release surface', () => {
