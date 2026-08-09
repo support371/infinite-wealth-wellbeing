@@ -10,7 +10,9 @@ export default defineConfig({
       input: {
         main: resolve(process.cwd(), 'index.html'),
         contact: resolve(process.cwd(), 'contact.html'),
-        membershipApply: resolve(process.cwd(), 'membership-apply.html')
+        membershipApply: resolve(process.cwd(), 'membership-apply.html'),
+        donate: resolve(process.cwd(), 'donate.html'),
+        trustCenter: resolve(process.cwd(), 'trust-center.html')
       }
     }
   }
