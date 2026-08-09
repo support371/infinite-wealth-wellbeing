@@ -1,3 +1,4 @@
+import { MEMBERSHIP_INTERESTS, MEMBERSHIP_TIERS, SUBMISSION_LIMITS } from '../shared/submission-contracts.js';
 import {
   applySecurityHeaders,
   cleanMultiline,
@@ -10,14 +11,8 @@ import {
   requirePost,
 } from './_lib/http.js';
 
-const ALLOWED_TIERS = new Set(['Explorer', 'Member', 'Guardian']);
-const ALLOWED_INTERESTS = new Set([
-  'Wealth & Financial Education',
-  'Holistic Well-being Information',
-  'Spiritual Well-being & Ministry',
-  'Community & Connection',
-  'All of the Above',
-]);
+const ALLOWED_TIERS = new Set(MEMBERSHIP_TIERS);
+const ALLOWED_INTERESTS = new Set(MEMBERSHIP_INTERESTS);
 
 export default async function handler(req, res) {
   applySecurityHeaders(req, res);
@@ -31,12 +26,12 @@ export default async function handler(req, res) {
     return res.status(202).json({ status: 'accepted' });
   }
 
-  const firstName = cleanText(body.firstName, 80);
-  const lastName = cleanText(body.lastName, 80);
-  const email = cleanText(body.email, 254).toLowerCase();
-  const tier = cleanText(body.tier, 40);
-  const interest = cleanText(body.interest, 100);
-  const introduction = cleanMultiline(body.introduction, 3000);
+  const firstName = cleanText(body.firstName, SUBMISSION_LIMITS.firstName);
+  const lastName = cleanText(body.lastName, SUBMISSION_LIMITS.lastName);
+  const email = cleanText(body.email, SUBMISSION_LIMITS.email).toLowerCase();
+  const tier = cleanText(body.tier, SUBMISSION_LIMITS.tier);
+  const interest = cleanText(body.interest, SUBMISSION_LIMITS.interest);
+  const introduction = cleanMultiline(body.introduction, SUBMISSION_LIMITS.introduction);
   const consent = body.consent === true;
 
   const errors = {};
