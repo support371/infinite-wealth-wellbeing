@@ -28,23 +28,15 @@ function serviceHeaders(serviceRoleKey, extra = {}) {
 
 function mapPersistenceError(data = {}) {
   const message = String(data.message || data.error || '');
-  if (message.includes('idempotency_key_reused')) {
-    return { status: 409, error: 'idempotency_conflict' };
-  }
-  if (message.includes('idempotency_in_progress')) {
-    return { status: 409, error: 'idempotency_in_progress' };
-  }
-  if (message.includes('invalid_idempotency_key')) {
-    return { status: 400, error: 'invalid_idempotency_key' };
-  }
+  if (message.includes('idempotency_key_reused')) return { status: 409, error: 'idempotency_conflict' };
+  if (message.includes('idempotency_in_progress')) return { status: 409, error: 'idempotency_in_progress' };
+  if (message.includes('invalid_idempotency_key')) return { status: 400, error: 'invalid_idempotency_key' };
   return { status: 502, error: 'persistence_failed' };
 }
 
 async function request(path, { method = 'GET', body, headers = {} } = {}) {
   const config = configuration();
-  if (!config) {
-    return { ok: false, status: 503, error: 'persistence_not_configured' };
-  }
+  if (!config) return { ok: false, status: 503, error: 'persistence_not_configured' };
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RPC_TIMEOUT_MS);
@@ -58,10 +50,7 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
     });
 
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { ok: false, ...mapPersistenceError(data) };
-    }
-
+    if (!response.ok) return { ok: false, ...mapPersistenceError(data) };
     return { ok: true, data };
   } catch {
     return { ok: false, status: 502, error: 'persistence_unavailable' };
@@ -104,10 +93,7 @@ export async function persistInquiry({ idempotencyKey, person, subject, message,
     p_subject: subject,
     p_message: message,
     p_request_id: metadata.requestId,
-    p_metadata: {
-      userAgent: metadata.userAgent,
-      submittedAt: metadata.submittedAt,
-    },
+    p_metadata: { userAgent: metadata.userAgent, submittedAt: metadata.submittedAt },
     p_consent_statement_version: 'web-v1',
   });
 }
@@ -133,43 +119,64 @@ export async function persistMembershipApplication({ idempotencyKey, person, req
     p_primary_interest: primaryInterest,
     p_introduction: introduction,
     p_request_id: metadata.requestId,
-    p_metadata: {
-      userAgent: metadata.userAgent,
-      submittedAt: metadata.submittedAt,
-    },
+    p_metadata: { userAgent: metadata.userAgent, submittedAt: metadata.submittedAt },
     p_consent_statement_version: 'web-v1',
   });
 }
 
-export async function hasSuccessfulNotification({ submissionKind, submissionId }) {
+async function hasSuccessfulDelivery({ submissionKind, submissionId, channel }) {
   if (!submissionId) return { ok: false, status: 400, error: 'submission_id_required' };
   const query = new URLSearchParams({
     submission_kind: `eq.${submissionKind}`,
     submission_id: `eq.${submissionId}`,
-    channel: 'eq.webhook',
-    status: 'eq.sent',
+    channel: `eq.${channel}`,
+    status: 'in.(sent,delivered)',
     select: 'id',
     limit: '1',
   });
   const result = await request(`/rest/v1/iww_notification_deliveries?${query.toString()}`);
   if (!result.ok) return result;
-  return {
-    ok: true,
-    sent: Array.isArray(result.data) && result.data.length > 0,
-  };
+  return { ok: true, sent: Array.isArray(result.data) && result.data.length > 0 };
 }
 
-export async function recordNotificationDelivery({ submissionKind, submissionId, delivered }) {
+export function hasSuccessfulNotification({ submissionKind, submissionId }) {
+  return hasSuccessfulDelivery({ submissionKind, submissionId, channel: 'webhook' });
+}
+
+export function hasSuccessfulEmailDelivery({ submissionKind, submissionId }) {
+  return hasSuccessfulDelivery({ submissionKind, submissionId, channel: 'email' });
+}
+
+export async function recordNotificationDelivery({ submissionKind, submissionId, delivered, attempt = 1 }) {
   if (!submissionId) return { ok: false, status: 400, error: 'submission_id_required' };
   return post('/rest/v1/iww_notification_deliveries', {
     submission_kind: submissionKind,
     submission_id: submissionId,
     channel: 'webhook',
     provider: 'workflow-webhook',
-    attempt: 1,
+    attempt,
     status: delivered.ok ? 'sent' : 'failed',
     error_code: delivered.ok ? null : delivered.error,
-  }, {
-    Prefer: 'return=minimal',
-  });
+  }, { Prefer: 'return=minimal' });
+}
+
+export async function recordEmailDelivery({
+  submissionKind,
+  submissionId,
+  delivered,
+  attempt = 1,
+  provider = 'email-adapter-webhook',
+  providerMessageId = null,
+}) {
+  if (!submissionId) return { ok: false, status: 400, error: 'submission_id_required' };
+  return post('/rest/v1/iww_notification_deliveries', {
+    submission_kind: submissionKind,
+    submission_id: submissionId,
+    channel: 'email',
+    provider,
+    provider_message_id: providerMessageId,
+    attempt,
+    status: delivered.ok ? 'sent' : 'failed',
+    error_code: delivered.ok ? null : delivered.error,
+  }, { Prefer: 'return=minimal' });
 }
