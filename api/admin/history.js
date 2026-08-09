@@ -1,6 +1,6 @@
-import { applySecurityHeaders, cleanText, handleOptions, requireAllowedOrigin } from '../_lib/http.js';
-import { authenticateStaff, sendStaffAuthError } from '../_lib/staff-auth.js';
-import { supabaseServiceRequest } from '../_lib/supabase-server.js';
+import { applySecurityHeaders, cleanText, handleOptions, requireAllowedOrigin } from '../../server/http.js';
+import { authenticateStaff, sendStaffAuthError } from '../../server/staff-auth.js';
+import { supabaseServiceRequest } from '../../server/supabase-server.js';
 
 const KINDS = new Set(['inquiry', 'membership_application']);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
