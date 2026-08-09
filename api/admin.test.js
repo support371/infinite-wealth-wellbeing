@@ -5,11 +5,18 @@ import adminHandler from './admin/submissions.js';
 const ORIGINAL_FETCH = global.fetch;
 const ENV_KEYS = ['IWW_SUPABASE_URL', 'IWW_SUPABASE_SERVICE_ROLE_KEY', 'PUBLIC_APP_ORIGIN'];
 const ORIGINAL_ENV = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
+const STAFF_USER_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 function configure() {
   process.env.IWW_SUPABASE_URL = 'https://iww-test.supabase.co';
   process.env.IWW_SUPABASE_SERVICE_ROLE_KEY = 'server-secret-test-key';
   process.env.PUBLIC_APP_ORIGIN = 'https://iww.example';
+}
+
+function staffToken(aal = 'aal2', sub = STAFF_USER_ID) {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ sub, aal, exp: 4102444800 })).toString('base64url');
+  return `${header}.${payload}.test-signature`;
 }
 
 function response() {
@@ -38,7 +45,7 @@ function staffFetch({ roles = ['reviewer'], items = [], transition, transitionEr
   const fetch = async (url, options) => {
     calls.push({ url, options });
     if (url.endsWith('/auth/v1/user')) {
-      return { ok: true, status: 200, json: async () => ({ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', email: 'reviewer@example.com' }) };
+      return { ok: true, status: 200, json: async () => ({ id: STAFF_USER_ID, email: 'reviewer@example.com' }) };
     }
     if (url.includes('/rest/v1/iww_user_roles?')) {
       return { ok: true, status: 200, json: async () => roles.map((role) => ({ role })) };
@@ -81,11 +88,22 @@ test('staff API rejects missing bearer token before any database request', async
   assert.equal(called, false);
 });
 
-test('staff API rejects an authenticated user without reviewer/admin role', async () => {
+test('password-only aal1 session is rejected before staff-role lookup', async () => {
+  const mocked = staffFetch({ roles: ['admin'] });
+  global.fetch = mocked.fetch;
+  const res = response();
+  await adminHandler(request('GET', { token: staffToken('aal1') }), res);
+  assert.equal(res.statusCode, 403);
+  assert.equal(res.body.error, 'mfa_required');
+  assert.equal(mocked.calls.length, 1);
+  assert.match(mocked.calls[0].url, /\/auth\/v1\/user$/);
+});
+
+test('staff API rejects an authenticated aal2 user without reviewer/admin role', async () => {
   const mocked = staffFetch({ roles: [] });
   global.fetch = mocked.fetch;
   const res = response();
-  await adminHandler(request('GET', { token: 'user-token' }), res);
+  await adminHandler(request('GET', { token: staffToken() }), res);
   assert.equal(res.statusCode, 403);
   assert.equal(res.body.error, 'staff_role_required');
   assert.equal(mocked.calls.length, 2);
@@ -95,7 +113,7 @@ test('reviewer can list inquiry queue with bounded server query', async () => {
   const mocked = staffFetch({ items: [{ id: '11111111-1111-4111-8111-111111111111', reference: 'IWW-INQ-ABC', status: 'received' }] });
   global.fetch = mocked.fetch;
   const res = response();
-  await adminHandler(request('GET', { token: 'staff-token', query: { kind: 'inquiry', status: 'received', limit: '500' } }), res);
+  await adminHandler(request('GET', { token: staffToken(), query: { kind: 'inquiry', status: 'received', limit: '500' } }), res);
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.kind, 'inquiry');
   assert.equal(res.body.count, 1);
@@ -109,7 +127,7 @@ test('reviewer can list membership applications using the correct table', async 
   const mocked = staffFetch({ items: [] });
   global.fetch = mocked.fetch;
   const res = response();
-  await adminHandler(request('GET', { token: 'staff-token', query: { kind: 'membership_application' } }), res);
+  await adminHandler(request('GET', { token: staffToken(), query: { kind: 'membership_application' } }), res);
   assert.equal(res.statusCode, 200);
   assert.match(mocked.calls[2].url, /iww_membership_applications\?/);
 });
@@ -122,7 +140,7 @@ test('status transition is performed by audited RPC with authenticated actor ide
   global.fetch = mocked.fetch;
   const res = response();
   await adminHandler(request('PATCH', {
-    token: 'staff-token',
+    token: staffToken(),
     body: {
       kind: 'inquiry', submissionId: '11111111-1111-4111-8111-111111111111',
       toStatus: 'triaged', reason: 'Initial staff triage',
@@ -133,7 +151,7 @@ test('status transition is performed by audited RPC with authenticated actor ide
   const rpcCall = mocked.calls[2];
   assert.match(rpcCall.url, /rpc\/iww_transition_submission$/);
   const rpcBody = JSON.parse(rpcCall.options.body);
-  assert.equal(rpcBody.p_actor_user_id, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+  assert.equal(rpcBody.p_actor_user_id, STAFF_USER_ID);
   assert.equal(rpcBody.p_to_status, 'triaged');
   assert.equal(rpcBody.p_reason, 'Initial staff triage');
 });
@@ -143,7 +161,7 @@ test('terminal decision is rejected before RPC when rationale is missing', async
   global.fetch = mocked.fetch;
   const res = response();
   await adminHandler(request('PATCH', {
-    token: 'staff-token',
+    token: staffToken(),
     body: {
       kind: 'inquiry', submissionId: '11111111-1111-4111-8111-111111111111',
       toStatus: 'rejected', reason: '   ',
@@ -160,7 +178,7 @@ test('database terminal-reason error remains a bounded client validation error',
   global.fetch = mocked.fetch;
   const res = response();
   await adminHandler(request('PATCH', {
-    token: 'staff-token',
+    token: staffToken(),
     body: {
       kind: 'inquiry', submissionId: '11111111-1111-4111-8111-111111111111',
       toStatus: 'closed', reason: 'Operational closure note',
@@ -175,7 +193,7 @@ test('illegal database status transition is returned as conflict', async () => {
   global.fetch = mocked.fetch;
   const res = response();
   await adminHandler(request('PATCH', {
-    token: 'staff-token',
+    token: staffToken(),
     body: {
       kind: 'inquiry', submissionId: '11111111-1111-4111-8111-111111111111',
       toStatus: 'approved', reason: 'Trying to skip review',
@@ -189,7 +207,7 @@ test('foreign browser origin is rejected before staff authentication', async () 
   let called = false;
   global.fetch = async () => { called = true; return { ok: true, json: async () => ({}) }; };
   const res = response();
-  await adminHandler(request('GET', { token: 'staff-token', origin: 'https://attacker.example' }), res);
+  await adminHandler(request('GET', { token: staffToken(), origin: 'https://attacker.example' }), res);
   assert.equal(res.statusCode, 403);
   assert.equal(res.body.error, 'origin_not_allowed');
   assert.equal(called, false);
