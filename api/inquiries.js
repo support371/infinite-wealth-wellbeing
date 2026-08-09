@@ -1,3 +1,4 @@
+import { CONTACT_SUBJECTS, SUBMISSION_LIMITS } from '../shared/submission-contracts.js';
 import {
   applySecurityHeaders,
   cleanMultiline,
@@ -10,17 +11,7 @@ import {
   requirePost,
 } from './_lib/http.js';
 
-const ALLOWED_SUBJECTS = new Set([
-  'General Inquiry',
-  'Wealth Education',
-  'Membership Questions',
-  'Prayer Request',
-  'Well-being Service Information',
-  'Ministry Partnership',
-  'Retreat Information',
-  'Donation Enquiry',
-  'Technical Support',
-]);
+const ALLOWED_SUBJECTS = new Set(CONTACT_SUBJECTS);
 
 export default async function handler(req, res) {
   applySecurityHeaders(req, res);
@@ -34,11 +25,11 @@ export default async function handler(req, res) {
     return res.status(202).json({ status: 'accepted' });
   }
 
-  const firstName = cleanText(body.firstName, 80);
-  const lastName = cleanText(body.lastName, 80);
-  const email = cleanText(body.email, 254).toLowerCase();
-  const subject = cleanText(body.subject, 100);
-  const message = cleanMultiline(body.message, 4000);
+  const firstName = cleanText(body.firstName, SUBMISSION_LIMITS.firstName);
+  const lastName = cleanText(body.lastName, SUBMISSION_LIMITS.lastName);
+  const email = cleanText(body.email, SUBMISSION_LIMITS.email).toLowerCase();
+  const subject = cleanText(body.subject, SUBMISSION_LIMITS.subject);
+  const message = cleanMultiline(body.message, SUBMISSION_LIMITS.message);
   const consent = body.consent === true;
 
   const errors = {};
