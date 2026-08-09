@@ -29,6 +29,8 @@ Apply in a non-production IWW environment first:
 8. `20260809067000_iww_staff_role_evidence_guard.sql`
 9. `20260809068000_iww_intake_throttle.sql`
 10. `20260809069000_iww_transactional_email_outbox.sql`
+11. `20260809070000_iww_operational_snapshot.sql`
+12. `20260809071000_iww_terminal_review_reason_guard.sql`
 
 Then verify:
 
@@ -42,9 +44,11 @@ Then verify:
 - same key + changed content is rejected;
 - intake throttle blocks excessive repeated-email submissions without storing IP addresses;
 - staff status transition state machine rejects invalid jumps;
+- `approved`, `rejected`, `spam`, and `closed` transitions require a durable rationale at the database boundary;
 - staff-role bootstrap/management guards preserve at least one active admin;
 - both outbox claim paths use concurrency-safe locking;
-- staff and email delivered states require matching durable delivery evidence.
+- staff and email delivered states require matching durable delivery evidence;
+- `iww_operational_snapshot()` returns aggregate queue/review health without submission content or personal details.
 
 Run database/security advisors after migration and resolve findings before proceeding.
 
@@ -158,7 +162,7 @@ Worker behavior:
 
 **Evidence:** verified sender, approved template versions, signed-adapter negative test, successful controlled delivery, provider message ID, retry/dead-letter drill, duplicate/idempotency drill.
 
-## Phase 8 — Run deep readiness
+## Phase 8 — Run deep readiness and operational-health checks
 
 Protected endpoint:
 
@@ -166,11 +170,11 @@ Protected endpoint:
 
 Use `IWW_NOTIFICATION_WORKER_SECRET` as the internal-readiness bearer secret.
 
-The probe verifies protected configuration and live access to required IWW tables including intake, roles, audit, staff-notification outbox, and transactional-email outbox.
+The probe verifies protected configuration, required IWW tables, and the aggregate operational snapshot. A healthy result requires zero stuck processing locks and zero unexplained dead-letter records in both staff and email delivery queues. Normal queued work and recent retryable failures remain visible without automatically declaring the environment unavailable.
 
 A 200 response is necessary but not sufficient for launch.
 
-**Evidence:** saved readiness response with timestamp, secrets removed.
+**Evidence:** saved readiness response with timestamp, secrets removed, operational snapshot reviewed.
 
 ## Phase 9 — Execute public-intake failure drills
 
@@ -215,7 +219,8 @@ A 200 response is necessary but not sufficient for launch.
 - restore adapter;
 - invoke worker;
 - confirm eventual durable delivery evidence and outbox completion;
-- verify the adapter idempotency key prevents an intentional duplicate send on replay.
+- verify the adapter idempotency key prevents an intentional duplicate send on replay;
+- simulate adapter acceptance followed by a failed delivery-ledger write and confirm the outbox does not falsely finalize.
 
 ### Membership application
 
@@ -229,11 +234,13 @@ Repeat equivalent checks for `/membership/apply`; verify no payment/subscription
 2. Confirm queue visibility.
 3. Move `received → triaged → in_review → approved/rejected/closed` only through allowed transitions.
 4. Attempt an invalid jump and verify conflict.
-5. Inspect status/audit/notification history.
-6. Verify reviewer cannot manage staff roles.
-7. Sign in as admin and verify role-management permissions.
+5. Attempt `approved`, `rejected`, `spam`, and `closed` without rationale and verify rejection.
+6. Complete terminal decisions with a meaningful rationale and verify it is present in status and audit history.
+7. Inspect status/audit/notification history.
+8. Verify reviewer cannot manage staff roles.
+9. Sign in as admin and verify role-management permissions.
 
-**Evidence:** transition audit history and negative-access tests.
+**Evidence:** transition audit history, rationale evidence, and negative-access tests.
 
 ## Phase 11 — Backup, restore, retention, and deletion
 
@@ -245,7 +252,7 @@ Before live data:
 - configure provider backup/PITR/recovery;
 - restore an isolated non-production backup;
 - run the read-only restore acceptance suite;
-- verify IWW tables, RLS, anon revocation, RPCs, triggers, outboxes, and authorization after restore;
+- verify IWW tables, RLS, anon revocation, RPCs, triggers, outboxes, operational snapshot, and authorization after restore;
 - do not replay external staff/email deliveries from a restore drill;
 - do not delete substantive audit/consent data without approved policy/legal rules.
 
@@ -253,7 +260,23 @@ The only automated deletion currently prepared is expired idempotency-key cleanu
 
 **Evidence:** approved policy/objectives, provider backup configuration, restore drill output, observed recovery point/time, post-drill cleanup evidence.
 
-## Phase 12 — Policy and public-claim release
+## Phase 12 — Incident-response drill
+
+Use `ops/INCIDENT_RESPONSE_RUNBOOK.md`.
+
+At minimum exercise in non-production:
+
+- one protected-secret rotation with old-key rejection proof;
+- one staff-authorization containment scenario;
+- one dead-letter or stale-worker scenario without manually fabricating delivered state;
+- one unsafe-public-claim takedown back to the pre-launch gate;
+- recovery verification showing that a readiness 200 is supporting evidence rather than the sole recovery decision.
+
+Do not invent legal/privacy notification deadlines during the drill. Record which entity/jurisdiction/contract facts would require review in a real incident.
+
+**Evidence:** incident timeline, decision log, rotation evidence, recovery checks, corrective controls.
+
+## Phase 13 — Policy and public-claim release
 
 Use `PUBLIC_CLAIM_AUDIT.md`.
 
@@ -263,7 +286,7 @@ Re-enable public domains one at a time; do not globally remove the pre-launch ga
 
 **Evidence:** claim inventory, substantiation, reviewer/owner, route approval.
 
-## Phase 13 — Final technical evidence
+## Phase 14 — Final technical evidence
 
 Complete:
 
@@ -278,6 +301,7 @@ Complete:
 - origin/auth/role negative tests;
 - staff/email retry and dead-letter tests;
 - backup/recovery evidence;
+- incident-response drill evidence;
 - provider CI/deployment evidence.
 
 Run:
@@ -289,13 +313,14 @@ npm run release:strict
 
 Do not launch while `release:strict` has required blockers.
 
-## Phase 14 — Release decision
+## Phase 15 — Release decision
 
 Release only when:
 
 - required machine-readable gates are `implemented` or `verified`;
 - protected production configuration exists;
-- durable persistence, staff operations, and transactional email are live-tested;
+- durable persistence, staff operations, transactional email, and operational monitoring are live-tested;
+- backup/recovery and incident-response drills have evidence;
 - policy/claim release is approved;
 - monitoring/recovery ownership is assigned;
 - production deploy evidence is saved.
