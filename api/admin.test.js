@@ -14,9 +14,7 @@ function configure() {
 
 function response() {
   return {
-    headers: {},
-    statusCode: 200,
-    body: null,
+    headers: {}, statusCode: 200, body: null,
     setHeader(name, value) { this.headers[name.toLowerCase()] = value; },
     status(code) { this.statusCode = code; return this; },
     json(body) { this.body = body; return this; },
@@ -26,9 +24,7 @@ function response() {
 
 function request(method, { body, query, token = '', origin } = {}) {
   return {
-    method,
-    body,
-    query,
+    method, body, query,
     headers: {
       'user-agent': 'admin-test',
       ...(token ? { authorization: `Bearer ${token}` } : {}),
@@ -96,16 +92,10 @@ test('staff API rejects an authenticated user without reviewer/admin role', asyn
 });
 
 test('reviewer can list inquiry queue with bounded server query', async () => {
-  const mocked = staffFetch({
-    items: [{ id: '11111111-1111-4111-8111-111111111111', reference: 'IWW-INQ-ABC', status: 'received' }],
-  });
+  const mocked = staffFetch({ items: [{ id: '11111111-1111-4111-8111-111111111111', reference: 'IWW-INQ-ABC', status: 'received' }] });
   global.fetch = mocked.fetch;
   const res = response();
-  await adminHandler(request('GET', {
-    token: 'staff-token',
-    query: { kind: 'inquiry', status: 'received', limit: '500' },
-  }), res);
-
+  await adminHandler(request('GET', { token: 'staff-token', query: { kind: 'inquiry', status: 'received', limit: '500' } }), res);
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.kind, 'inquiry');
   assert.equal(res.body.count, 1);
@@ -119,10 +109,7 @@ test('reviewer can list membership applications using the correct table', async 
   const mocked = staffFetch({ items: [] });
   global.fetch = mocked.fetch;
   const res = response();
-  await adminHandler(request('GET', {
-    token: 'staff-token',
-    query: { kind: 'membership_application' },
-  }), res);
+  await adminHandler(request('GET', { token: 'staff-token', query: { kind: 'membership_application' } }), res);
   assert.equal(res.statusCode, 200);
   assert.match(mocked.calls[2].url, /iww_membership_applications\?/);
 });
@@ -130,25 +117,17 @@ test('reviewer can list membership applications using the correct table', async 
 test('status transition is performed by audited RPC with authenticated actor identity', async () => {
   const mocked = staffFetch({
     roles: ['admin'],
-    transition: {
-      status: 'triaged',
-      reference: 'IWW-INQ-ABC',
-      submissionId: '11111111-1111-4111-8111-111111111111',
-      unchanged: false,
-    },
+    transition: { status: 'triaged', reference: 'IWW-INQ-ABC', submissionId: '11111111-1111-4111-8111-111111111111', unchanged: false },
   });
   global.fetch = mocked.fetch;
   const res = response();
   await adminHandler(request('PATCH', {
     token: 'staff-token',
     body: {
-      kind: 'inquiry',
-      submissionId: '11111111-1111-4111-8111-111111111111',
-      toStatus: 'triaged',
-      reason: 'Initial staff triage',
+      kind: 'inquiry', submissionId: '11111111-1111-4111-8111-111111111111',
+      toStatus: 'triaged', reason: 'Initial staff triage',
     },
   }), res);
-
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.status, 'updated');
   const rpcCall = mocked.calls[2];
@@ -159,19 +138,47 @@ test('status transition is performed by audited RPC with authenticated actor ide
   assert.equal(rpcBody.p_reason, 'Initial staff triage');
 });
 
-test('illegal database status transition is returned as conflict', async () => {
-  const mocked = staffFetch({
-    transitionError: { status: 400, message: 'invalid_status_transition' },
-  });
+test('terminal decision is rejected before RPC when rationale is missing', async () => {
+  const mocked = staffFetch({ roles: ['reviewer'] });
   global.fetch = mocked.fetch;
   const res = response();
   await adminHandler(request('PATCH', {
     token: 'staff-token',
     body: {
-      kind: 'inquiry',
-      submissionId: '11111111-1111-4111-8111-111111111111',
-      toStatus: 'approved',
-      reason: 'Trying to skip review',
+      kind: 'inquiry', submissionId: '11111111-1111-4111-8111-111111111111',
+      toStatus: 'rejected', reason: '   ',
+    },
+  }), res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.error, 'status_reason_required');
+  assert.equal(mocked.calls.length, 2);
+  assert.equal(mocked.calls.some((call) => call.url.endsWith('/rpc/iww_transition_submission')), false);
+});
+
+test('database terminal-reason error remains a bounded client validation error', async () => {
+  const mocked = staffFetch({ transitionError: { status: 400, message: 'status_reason_required' } });
+  global.fetch = mocked.fetch;
+  const res = response();
+  await adminHandler(request('PATCH', {
+    token: 'staff-token',
+    body: {
+      kind: 'inquiry', submissionId: '11111111-1111-4111-8111-111111111111',
+      toStatus: 'closed', reason: 'Operational closure note',
+    },
+  }), res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.error, 'status_reason_required');
+});
+
+test('illegal database status transition is returned as conflict', async () => {
+  const mocked = staffFetch({ transitionError: { status: 400, message: 'invalid_status_transition' } });
+  global.fetch = mocked.fetch;
+  const res = response();
+  await adminHandler(request('PATCH', {
+    token: 'staff-token',
+    body: {
+      kind: 'inquiry', submissionId: '11111111-1111-4111-8111-111111111111',
+      toStatus: 'approved', reason: 'Trying to skip review',
     },
   }), res);
   assert.equal(res.statusCode, 409);
@@ -182,10 +189,7 @@ test('foreign browser origin is rejected before staff authentication', async () 
   let called = false;
   global.fetch = async () => { called = true; return { ok: true, json: async () => ({}) }; };
   const res = response();
-  await adminHandler(request('GET', {
-    token: 'staff-token',
-    origin: 'https://attacker.example',
-  }), res);
+  await adminHandler(request('GET', { token: 'staff-token', origin: 'https://attacker.example' }), res);
   assert.equal(res.statusCode, 403);
   assert.equal(res.body.error, 'origin_not_allowed');
   assert.equal(called, false);
