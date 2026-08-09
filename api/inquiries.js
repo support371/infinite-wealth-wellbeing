@@ -12,6 +12,7 @@ import {
   requirePost,
 } from './_lib/http.js';
 import {
+  hasSuccessfulNotification,
   persistInquiry,
   readIdempotencyKey,
   recordNotificationDelivery,
@@ -58,13 +59,7 @@ export default async function handler(req, res) {
 
   const metadata = requestMetadata(req);
   const person = { firstName, lastName, email };
-  const persisted = await persistInquiry({
-    idempotencyKey,
-    person,
-    subject,
-    message,
-    metadata,
-  });
+  const persisted = await persistInquiry({ idempotencyKey, person, subject, message, metadata });
 
   if (!persisted.ok) {
     return res.status(persisted.status).json({
@@ -78,6 +73,19 @@ export default async function handler(req, res) {
     return res.status(502).json({
       error: 'persistence_invalid_response',
       message: 'The submission store returned an invalid acknowledgement.',
+    });
+  }
+
+  const previousDelivery = await hasSuccessfulNotification({
+    submissionKind: 'inquiry',
+    submissionId: stored.submissionId,
+  });
+
+  if (previousDelivery.ok && previousDelivery.sent) {
+    return res.status(202).json({
+      status: 'accepted',
+      reference: stored.reference,
+      staffNotification: 'already-sent',
     });
   }
 
