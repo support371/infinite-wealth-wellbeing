@@ -6,6 +6,10 @@ const migration = readFileSync(
   new URL('../supabase/migrations/20260809060000_iww_production_core.sql', import.meta.url),
   'utf8',
 );
+const atomicIntake = readFileSync(
+  new URL('../supabase/migrations/20260809061000_iww_atomic_intake.sql', import.meta.url),
+  'utf8',
+);
 
 const TABLES = [
   'iww_profiles',
@@ -69,6 +73,48 @@ test('schema includes durable operational evidence tables', () => {
   assert.match(migration, /create table public\.iww_audit_events/i);
 });
 
+test('atomic intake RPCs claim idempotency before creating submissions', () => {
+  assert.match(atomicIntake, /create or replace function public\.iww_accept_inquiry/i);
+  assert.match(atomicIntake, /create or replace function public\.iww_accept_membership_application/i);
+  assert.match(atomicIntake, /insert into public\.iww_idempotency_records[\s\S]*on conflict \(idempotency_key\) do nothing/i);
+  assert.match(atomicIntake, /get diagnostics v_claimed_rows = row_count;/i);
+  assert.equal(/get diagnostics v_claimed = row_count;/i.test(atomicIntake), false);
+});
+
+test('idempotency replay rejects a key used for different request content', () => {
+  const occurrences = atomicIntake.match(/raise exception 'idempotency_key_reused';/g) || [];
+  assert.equal(occurrences.length, 2);
+  assert.match(atomicIntake, /v_existing\.request_hash <> p_request_hash/i);
+});
+
+test('atomic intake records consent, initial status, audit evidence, and stable response', () => {
+  assert.match(atomicIntake, /insert into public\.iww_consent_records/i);
+  assert.match(atomicIntake, /insert into public\.iww_submission_status_events/i);
+  assert.match(atomicIntake, /insert into public\.iww_audit_events/i);
+  assert.match(atomicIntake, /'submissionId', v_submission_id/i);
+  assert.match(atomicIntake, /response_body = v_response/i);
+});
+
+test('public intake RPCs are executable only by service_role', () => {
+  assert.match(
+    atomicIntake,
+    /revoke all on function public\.iww_accept_inquiry[\s\S]*from public, anon, authenticated;/i,
+  );
+  assert.match(
+    atomicIntake,
+    /revoke all on function public\.iww_accept_membership_application[\s\S]*from public, anon, authenticated;/i,
+  );
+  assert.match(
+    atomicIntake,
+    /grant execute on function public\.iww_accept_inquiry[\s\S]*to service_role;/i,
+  );
+  assert.match(
+    atomicIntake,
+    /grant execute on function public\.iww_accept_membership_application[\s\S]*to service_role;/i,
+  );
+});
+
 test('payment tables are not invented before a payment provider is selected', () => {
   assert.equal(/create table public\.iww_(payments|payment_events|charges|donations)/i.test(migration), false);
+  assert.equal(/create table public\.iww_(payments|payment_events|charges|donations)/i.test(atomicIntake), false);
 });
