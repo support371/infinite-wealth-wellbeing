@@ -8,6 +8,7 @@ import {
   handleOptions,
   isValidEmail,
   requestMetadata,
+  requireAllowedOrigin,
   requirePost,
 } from './_lib/http.js';
 
@@ -16,6 +17,7 @@ const ALLOWED_SUBJECTS = new Set(CONTACT_SUBJECTS);
 export default async function handler(req, res) {
   applySecurityHeaders(req, res);
   if (handleOptions(req, res)) return;
+  if (!requireAllowedOrigin(req, res)) return;
   if (!requirePost(req, res)) return;
 
   const body = getBody(req);
@@ -70,8 +72,5 @@ export default async function handler(req, res) {
     });
   }
 
-  return res.status(202).json({
-    status: 'accepted',
-    reference: payload.reference,
-  });
+  return res.status(202).json({ status: 'accepted', reference: payload.reference });
 }
