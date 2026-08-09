@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "release": "production-v1",
+  "updatedAt": "2026-08-09",
+  "gates": [
+    {
+      "id": "safe_public_routing",
+      "title": "Safe public routing",
+      "status": "implemented",
+      "requiredForLaunch": true,
+      "evidence": [
+        "vercel.json routes unreviewed public paths to prelaunch.html",
+        "api/release-config.test.js"
+      ]
+    },
+    {
+      "id": "validated_public_intake",
+      "title": "Validated contact and membership-interest intake",
+      "status": "implemented",
+      "requiredForLaunch": true,
+      "evidence": [
+        "api/inquiries.js",
+        "api/membership-applications.js",
+        "shared/submission-contracts.js"
+      ]
+    },
+    {
+      "id": "durable_persistence_code",
+      "title": "Durable idempotent persistence code",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": [
+        "api/_lib/persistence.js",
+        "supabase/migrations/20260809060000_iww_production_core.sql",
+        "supabase/migrations/20260809061000_iww_atomic_intake.sql"
+      ],
+      "blocker": "Dedicated or explicitly approved IWW database has not been selected and migrations have not been applied."
+    },
+    {
+      "id": "dedicated_database",
+      "title": "Dedicated production database and authentication boundary",
+      "status": "blocked_external",
+      "requiredForLaunch": true,
+      "evidence": [],
+      "blocker": "Existing connected Supabase projects contain GEM/GemAssist schemas and were intentionally not reused."
+    },
+    {
+      "id": "staff_notification",
+      "title": "Signed staff notification workflow",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": [
+        "api/_lib/http.js",
+        "api/_lib/persistence.js"
+      ],
+      "blocker": "Protected webhook URLs and signing secret must be configured and live delivery verified."
+    },
+    {
+      "id": "admin_review",
+      "title": "Authenticated administrative review queue",
+      "status": "blocked_dependency",
+      "requiredForLaunch": true,
+      "evidence": [],
+      "blocker": "Depends on approved IWW authentication/database boundary."
+    },
+    {
+      "id": "legal_policy",
+      "title": "Reviewed legal, privacy, membership, refund, and disclaimer surfaces",
+      "status": "blocked_external",
+      "requiredForLaunch": true,
+      "evidence": [
+        "trust-center.html",
+        "PUBLIC_CLAIM_AUDIT.md"
+      ],
+      "blocker": "Policies and entity-specific legal review have not been supplied/approved."
+    },
+    {
+      "id": "public_claims",
+      "title": "Health, financial, ministry/tax, credential, testimonial, and impact claims substantiated",
+      "status": "blocked_external",
+      "requiredForLaunch": true,
+      "evidence": [
+        "PUBLIC_CLAIM_AUDIT.md"
+      ],
+      "blocker": "Evidence owners and substantiation are incomplete; legacy routes remain gated."
+    },
+    {
+      "id": "payments",
+      "title": "Hosted tokenized payment and donation workflow",
+      "status": "blocked_external",
+      "requiredForLaunch": false,
+      "evidence": [
+        "donate.html"
+      ],
+      "blocker": "Provider, pricing/donation treatment, receipts, refunds, and webhook rules are not approved."
+    },
+    {
+      "id": "transactional_email",
+      "title": "Transactional email and delivery audit",
+      "status": "blocked_dependency",
+      "requiredForLaunch": true,
+      "evidence": [
+        "supabase/migrations/20260809060000_iww_production_core.sql"
+      ],
+      "blocker": "Email provider/sender domain and durable production database are not configured."
+    },
+    {
+      "id": "backup_recovery",
+      "title": "Backup, restore, retention, and deletion procedures verified",
+      "status": "blocked_dependency",
+      "requiredForLaunch": true,
+      "evidence": [
+        "supabase/README.md"
+      ],
+      "blocker": "Cannot exercise provider backup/recovery until the dedicated production data project exists."
+    },
+    {
+      "id": "ci_deploy_evidence",
+      "title": "CI and production deployment evidence",
+      "status": "blocked_external",
+      "requiredForLaunch": true,
+      "evidence": [
+        ".github/workflows/production-ci.yml",
+        "vercel.json"
+      ],
+      "blocker": "GitHub Actions runner is failing before useful step logs and recent Vercel preview builds are rate-limited."
+    },
+    {
+      "id": "e2e_accessibility_security",
+      "title": "End-to-end, accessibility, mobile, performance, and security verification",
+      "status": "in_progress",
+      "requiredForLaunch": true,
+      "evidence": [
+        "api/production.test.js",
+        "api/persistence.test.js",
+        "api/origin-contracts.test.js",
+        "api/release-config.test.js",
+        "api/data-model.test.js"
+      ],
+      "blocker": "Automated contract coverage exists; live end-to-end and assistive-technology verification require deployable provider environments."
+    }
+  ]
+}
