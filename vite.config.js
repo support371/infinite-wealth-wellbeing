@@ -13,7 +13,9 @@ export default defineConfig({
         contact: resolve(process.cwd(), 'contact.html'),
         membershipApply: resolve(process.cwd(), 'membership-apply.html'),
         donate: resolve(process.cwd(), 'donate.html'),
-        trustCenter: resolve(process.cwd(), 'trust-center.html')
+        trustCenter: resolve(process.cwd(), 'trust-center.html'),
+        admin: resolve(process.cwd(), 'admin.html'),
+        adminHistory: resolve(process.cwd(), 'admin-history.html')
       }
     }
   }
