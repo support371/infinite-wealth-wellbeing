@@ -84,7 +84,7 @@ export function loadState() {
     const raw = window.localStorage.getItem(STORAGE_KEY)
       || window.localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) return clone(DEFAULT_STATE);
-    return mergeState(JSON.parse(raw));
+    return repairQueueState(mergeState(JSON.parse(raw)));
   } catch {
     return clone(DEFAULT_STATE);
   }
@@ -141,7 +141,7 @@ export function methodConstraints(checkIn) {
 export function normalizeQueue(queue = []) {
   const rank = { now: 0, next: 1, later: 2 };
   return [...queue]
-    .filter((item) => item.status !== 'done' && item.status !== 'archived')
+    .filter((item) => item.status === 'open')
     .sort((a, b) => {
       const stage = (rank[a.stage] ?? 9) - (rank[b.stage] ?? 9);
       if (stage !== 0) return stage;
@@ -149,6 +149,12 @@ export function normalizeQueue(queue = []) {
       if (priority !== 0) return priority;
       return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
     });
+}
+
+export function blockedItems(queue = []) {
+  return [...queue]
+    .filter((item) => item.status === 'blocked')
+    .sort((a, b) => String(a.blockedAt || '').localeCompare(String(b.blockedAt || '')));
 }
 
 export function repairQueueState(state) {
@@ -177,8 +183,23 @@ export function isDayOpen(state, date = new Date()) {
 export function openDay(state, openingIntent = '', date = new Date()) {
   if (isDayOpen(state, date)) return state;
   const openedAt = date.toISOString();
+  let dailySessions = state.dailySessions;
+
+  if (state.currentSession?.status === 'open' && state.currentSession.date !== todayKey(date)) {
+    const interrupted = {
+      ...state.currentSession,
+      status: 'interrupted',
+      closedAt: openedAt,
+      closingNote: 'Carried forward automatically when a new day was opened.',
+      openWorkAtClose: normalizeQueue(state.queue).map((item) => item.id),
+      evidenceCountAtClose: state.evidence.length,
+    };
+    dailySessions = [interrupted, ...dailySessions].slice(0, 90);
+  }
+
   return {
     ...state,
+    dailySessions,
     currentSession: {
       id: id('day'),
       date: todayKey(date),
@@ -200,6 +221,7 @@ export function closeDay(state, closingNote = '', date = new Date()) {
     closedAt: date.toISOString(),
     closingNote: closingNote.trim(),
     openWorkAtClose: normalizeQueue(state.queue).map((item) => item.id),
+    blockedWorkAtClose: blockedItems(state.queue).map((item) => item.id),
     evidenceCountAtClose: state.evidence.length,
   };
   return {
@@ -253,7 +275,7 @@ export function reviewPrinciple(state, principleId, newText, reason, evidenceTex
 
 export function getRequiredAction(state, date = new Date()) {
   const queue = normalizeQueue(state.queue);
-  const active = queue.find((item) => item.stage === 'now') || queue[0];
+  const active = queue.find((item) => item.stage === 'now');
   const pace = paceFromEnergy(state.checkIn?.energy);
   const constraints = methodConstraints(state.checkIn);
 
@@ -269,8 +291,8 @@ export function getRequiredAction(state, date = new Date()) {
 
   if (!active) {
     return {
-      kind: 'define',
-      title: 'Define the next required result',
+      kind: queue.length ? 'replan' : 'define',
+      title: queue.length ? 'Choose the next active result' : 'Define the next required result',
       instruction: state.primaryMission?.outcome || 'Define one result that must become real next.',
       pace,
       constraints,
@@ -337,6 +359,16 @@ export function addQueueItem(state, item) {
   return repairQueueState(next);
 }
 
+export function activateQueueItem(state, itemId) {
+  if (normalizeQueue(state.queue).some((item) => item.stage === 'now')) return state;
+  const item = state.queue.find((entry) => entry.id === itemId && entry.status === 'open');
+  if (!item) return state;
+  return {
+    ...state,
+    queue: state.queue.map((entry) => entry.id === itemId ? { ...entry, stage: 'now', activatedAt: new Date().toISOString() } : entry),
+  };
+}
+
 export function completeWithEvidence(state, itemId, evidenceText) {
   const evidence = String(evidenceText || '').trim();
   if (!evidence) return state;
@@ -357,6 +389,16 @@ export function completeWithEvidence(state, itemId, evidenceText) {
       },
       ...state.evidence,
     ],
+  };
+}
+
+function promoteNextAvailable(state, excludeId = null) {
+  const open = normalizeQueue(state.queue).filter((item) => item.id !== excludeId);
+  if (!open.length || open.some((item) => item.stage === 'now')) return state;
+  const next = open[0];
+  return {
+    ...state,
+    queue: state.queue.map((item) => item.id === next.id ? { ...item, stage: 'now' } : item),
   };
 }
 
@@ -381,7 +423,52 @@ export function deferWithOverride(state, itemId, reason) {
       ...state.overrides,
     ],
   };
-  return nextStageAfterCompletion(deferred);
+  return promoteNextAvailable(deferred, itemId);
+}
+
+export function blockWithReason(state, itemId, reason) {
+  const cleanReason = String(reason || '').trim();
+  if (!cleanReason) return state;
+  const item = state.queue.find((q) => q.id === itemId);
+  if (!item || item.status !== 'open') return state;
+  const createdAt = new Date().toISOString();
+  const blocked = {
+    ...state,
+    queue: state.queue.map((q) => q.id === itemId ? {
+      ...q,
+      status: 'blocked',
+      blockedAt: createdAt,
+      blockReason: cleanReason,
+    } : q),
+    overrides: [
+      {
+        id: id('override'),
+        itemId,
+        title: item.title,
+        reason: cleanReason,
+        disposition: 'blocked',
+        createdAt,
+      },
+      ...state.overrides,
+    ],
+  };
+  return promoteNextAvailable(blocked, itemId);
+}
+
+export function unblockItem(state, itemId) {
+  const item = state.queue.find((q) => q.id === itemId && q.status === 'blocked');
+  if (!item) return state;
+  const hasNow = normalizeQueue(state.queue).some((entry) => entry.stage === 'now');
+  return {
+    ...state,
+    queue: state.queue.map((q) => q.id === itemId ? {
+      ...q,
+      status: 'open',
+      stage: hasNow ? 'next' : 'now',
+      unblockedAt: new Date().toISOString(),
+      blockReason: '',
+    } : q),
+  };
 }
 
 export function promoteIncubatorItem(state, ideaId) {
@@ -402,13 +489,7 @@ export function promoteIncubatorItem(state, ideaId) {
 }
 
 export function nextStageAfterCompletion(state) {
-  const open = normalizeQueue(state.queue);
-  if (!open.length || open.some((item) => item.stage === 'now')) return state;
-  const next = open[0];
-  return {
-    ...state,
-    queue: state.queue.map((item) => item.id === next.id ? { ...item, stage: 'now' } : item),
-  };
+  return promoteNextAvailable(state);
 }
 
 export function resetState() {
