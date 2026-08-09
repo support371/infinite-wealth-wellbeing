@@ -1,5 +1,6 @@
 -- Privileged IWW staff roles may be granted only to Auth users with a verified MFA factor.
--- Replaces bootstrap/role-management RPCs while preserving their public signatures.
+-- Replaces bootstrap/role-management RPCs while preserving the evidence/no-op semantics
+-- established by the prior staff-role evidence migration.
 
 create or replace function iww_private.user_has_verified_mfa(p_user_id uuid)
 returns boolean
@@ -45,27 +46,39 @@ begin
     raise exception 'admin_already_bootstrapped';
   end if;
 
-  insert into public.iww_user_roles (
-    user_id, role, granted_by, granted_at, revoked_at
-  ) values (
-    p_user_id, 'admin', null, now(), null
-  )
+  insert into public.iww_user_roles (user_id, role, granted_by, granted_at, revoked_at)
+  values (p_user_id, 'admin', null, now(), null)
   on conflict (user_id, role) do update
     set granted_by = null,
         granted_at = now(),
         revoked_at = null;
 
   insert into public.iww_audit_events (
-    actor_user_id, action, entity_kind, entity_id, details
+    actor_user_id,
+    action,
+    entity_kind,
+    entity_id,
+    details
   ) values (
     null,
     'staff.admin_bootstrapped',
-    'user',
+    'user_role',
     p_user_id::text,
-    jsonb_build_object('role', 'admin', 'mfaVerified', true, 'bootstrap', true)
+    jsonb_build_object(
+      'targetUserId', p_user_id,
+      'role', 'admin',
+      'systemBootstrap', true,
+      'mfaVerified', true
+    )
   );
 
-  return jsonb_build_object('userId', p_user_id, 'role', 'admin', 'active', true);
+  return jsonb_build_object(
+    'userId', p_user_id,
+    'role', 'admin',
+    'active', true,
+    'changed', true,
+    'mfaVerified', true
+  );
 end;
 $$;
 
@@ -81,8 +94,10 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_now timestamptz := now();
-  v_active_admin_count integer;
+  v_active_admins integer;
+  v_changed_rows integer := 0;
+  v_changed boolean := false;
+  v_mfa_verified boolean := false;
 begin
   if p_role not in ('reviewer'::public.iww_user_role, 'admin'::public.iww_user_role) then
     raise exception 'invalid_staff_role';
@@ -102,60 +117,90 @@ begin
     raise exception 'auth_user_not_found';
   end if;
 
-  if p_active and not (select iww_private.user_has_verified_mfa(p_target_user_id)) then
-    raise exception 'verified_mfa_required';
+  if p_active then
+    v_mfa_verified := (select iww_private.user_has_verified_mfa(p_target_user_id));
+    if not v_mfa_verified then
+      raise exception 'verified_mfa_required';
+    end if;
+  end if;
+
+  if p_role = 'admin'::public.iww_user_role and not p_active then
+    select count(*)::integer
+      into v_active_admins
+      from public.iww_user_roles
+     where role = 'admin'::public.iww_user_role
+       and revoked_at is null
+       and user_id <> p_target_user_id;
+
+    if v_active_admins = 0
+       and exists (
+         select 1
+           from public.iww_user_roles
+          where user_id = p_target_user_id
+            and role = 'admin'::public.iww_user_role
+            and revoked_at is null
+       ) then
+      raise exception 'last_admin_required';
+    end if;
   end if;
 
   if p_active then
-    insert into public.iww_user_roles (
-      user_id, role, granted_by, granted_at, revoked_at
-    ) values (
-      p_target_user_id, p_role, p_actor_user_id, v_now, null
-    )
-    on conflict (user_id, role) do update
-      set granted_by = excluded.granted_by,
-          granted_at = excluded.granted_at,
-          revoked_at = null;
-  else
-    if p_role = 'admin'::public.iww_user_role then
-      select count(*)::integer
-        into v_active_admin_count
+    if exists (
+      select 1
         from public.iww_user_roles
-       where role = 'admin'::public.iww_user_role
-         and revoked_at is null;
-
-      if v_active_admin_count <= 1
-         and exists (
-           select 1 from public.iww_user_roles
-            where user_id = p_target_user_id
-              and role = 'admin'::public.iww_user_role
-              and revoked_at is null
-         ) then
-        raise exception 'last_admin_required';
-      end if;
+       where user_id = p_target_user_id
+         and role = p_role
+         and revoked_at is null
+    ) then
+      v_changed := false;
+    else
+      insert into public.iww_user_roles (user_id, role, granted_by, granted_at, revoked_at)
+      values (p_target_user_id, p_role, p_actor_user_id, now(), null)
+      on conflict (user_id, role) do update
+        set granted_by = p_actor_user_id,
+            granted_at = now(),
+            revoked_at = null;
+      v_changed := true;
     end if;
-
+  else
     update public.iww_user_roles
-       set revoked_at = v_now
+       set revoked_at = now()
      where user_id = p_target_user_id
        and role = p_role
        and revoked_at is null;
+    get diagnostics v_changed_rows = row_count;
+    v_changed := v_changed_rows > 0;
   end if;
 
   insert into public.iww_audit_events (
-    actor_user_id, action, entity_kind, entity_id, details
+    actor_user_id,
+    action,
+    entity_kind,
+    entity_id,
+    details
   ) values (
     p_actor_user_id,
-    case when p_active then 'staff.role_granted' else 'staff.role_revoked' end,
-    'user',
+    case
+      when not v_changed then 'staff.role_unchanged'
+      when p_active then 'staff.role_granted'
+      else 'staff.role_revoked'
+    end,
+    'user_role',
     p_target_user_id::text,
-    jsonb_build_object('role', p_role, 'active', p_active, 'mfaVerifiedWhenGranted', case when p_active then true else null end)
+    jsonb_build_object(
+      'role', p_role,
+      'active', p_active,
+      'changed', v_changed,
+      'mfaVerifiedWhenGranted', case when p_active then v_mfa_verified else null end
+    )
   );
 
   return jsonb_build_object(
     'userId', p_target_user_id,
     'role', p_role,
-    'active', p_active
+    'active', p_active,
+    'changed', v_changed,
+    'mfaVerifiedWhenGranted', case when p_active then v_mfa_verified else null end
   );
 end;
 $$;
