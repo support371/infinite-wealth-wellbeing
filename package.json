@@ -8,11 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "api": "node services/api/src/index.js",
-    "test:production": "node --test api/production.test.js api/persistence.test.js api/origin-contracts.test.js api/release-config.test.js api/data-model.test.js api/release-gates.test.js",
+    "test:production": "node --test api/*.test.js",
     "release:status": "node scripts/check-release-gates.mjs",
     "release:strict": "node scripts/check-release-gates.mjs --strict"
   },
   "dependencies": {
+    "@supabase/supabase-js": "latest",
     "@vitejs/plugin-react": "latest",
     "vite": "latest",
     "react": "latest",
