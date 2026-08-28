@@ -93,3 +93,45 @@ export async function createStripeBillingPortal(customerId, returnUrl) {
   if (!response.ok || !payload.url) return { ok: false, error: payload?.error?.message || 'stripe_portal_failed' };
   return { ok: true, url: payload.url };
 }
+
+function responseText(payload) {
+  if (typeof payload?.output_text === 'string' && payload.output_text.trim()) return payload.output_text.trim();
+  return (payload?.output || [])
+    .flatMap((item) => item?.content || [])
+    .filter((content) => content?.type === 'output_text' && typeof content.text === 'string')
+    .map((content) => content.text)
+    .join('\n')
+    .trim();
+}
+
+export async function runIwwGuide({ prompt, role }) {
+  if (!process.env.OPENAI_API_KEY) return { ok: false, error: 'iww_guide_not_configured' };
+  const cleanPrompt = String(prompt || '').trim();
+  if (!cleanPrompt || cleanPrompt.length > 4000) return { ok: false, error: 'invalid_guide_prompt' };
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL || 'gpt-5.6-luna',
+      max_output_tokens: 700,
+      instructions: [
+        'You are IWW Guide inside Infinite World of Well-Being.',
+        'Only help with product navigation, reflective planning, resource discovery, summarization, and drafting.',
+        'Do not diagnose medical or mental-health conditions, determine whether a situation is a crisis, prescribe treatment, give personalized regulated investment advice, choose investments, execute or recommend transactions, send money, or make autonomous financial decisions.',
+        'When a request crosses those boundaries, state the relevant boundary briefly and redirect to safe planning, education, or an appropriate human professional.',
+        'Do not invent account data. Use only facts the user includes in the current prompt.',
+        `The signed-in IWW role is ${role || 'member'}.`,
+      ].join(' '),
+      input: cleanPrompt,
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) return { ok: false, error: payload?.error?.message || 'iww_guide_provider_error' };
+  const text = responseText(payload);
+  if (!text) return { ok: false, error: 'iww_guide_empty_response' };
+  return { ok: true, text };
+}
