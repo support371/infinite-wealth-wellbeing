@@ -20,8 +20,13 @@ declare
   v_action text;
   v_metadata jsonb;
 begin
-  v_org := coalesce(new.organization_id,old.organization_id);
-  v_id := coalesce(new.id,old.id);
+  if tg_op='DELETE' then
+    v_org := old.organization_id;
+    v_id := old.id;
+  else
+    v_org := new.organization_id;
+    v_id := new.id;
+  end if;
   v_action := lower(tg_table_name) || '.' || lower(tg_op);
   v_metadata := jsonb_build_object('source','database_trigger');
   if tg_op='UPDATE' then
@@ -29,7 +34,8 @@ begin
   end if;
   insert into public.audit_events(organization_id,actor_user_id,action,target_type,target_id,metadata)
   values(v_org,auth.uid(),v_action,tg_table_name,v_id,v_metadata);
-  return case when tg_op='DELETE' then old else new end;
+  if tg_op='DELETE' then return old; end if;
+  return new;
 end;
 $$;
 
