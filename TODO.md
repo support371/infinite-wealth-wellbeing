@@ -80,16 +80,16 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 ## Phase 7 — Deployment
 - [x] Keep `support371/infinite-wealth-wellbeing` as the sole source repository.
 - [x] Link/reuse the separate Vercel project for this repository only.
-- [ ] Configure Production/Preview/Development environment variables separately.
+- [x] Configure Production/Preview/Development environment variables separately.
 - [ ] Configure IWW Auth redirect URLs only after the final deployment URL is known.
-- [ ] Deploy a preview first, inspect build and runtime logs, then promote/deploy production only after passing checks.
-- [ ] Verify auth, role-routing, RLS-protected queries, dashboard data, mobile UI, error states, and a production smoke test.
+- [x] Deploy a preview first, inspect build and runtime logs, then promote/deploy production only after passing checks.
+- [ ] Verify auth, role-routing, RLS-protected queries, dashboard data, mobile UI, error states, and a production smoke test. Public routes and `/api/health` pass; authenticated end-to-end smoke still requires a real IWW user.
 
 ## Acceptance checklist
-- [ ] IWW deploys independently from GEM.
-- [ ] IWW has separate users/auth/data/secrets/database.
-- [ ] Every production screen is driven by real IWW persistence or has a deliberate, useful empty state—not hardcoded demo arrays.
-- [ ] Roles and RLS reliably prevent cross-organization and cross-role data access.
-- [ ] All sensitive secrets are server-side and absent from source control.
-- [ ] Build, tests, and deployment are green.
-- [ ] Deployment URL, environment-variable names (not values), database migration IDs, and unresolved caveats are documented in the final handoff.
+- [x] IWW deploys independently from GEM.
+- [x] IWW has separate users/auth/data/secrets/database.
+- [x] Every production screen is driven by real IWW persistence or has a deliberate, useful empty state—not hardcoded demo arrays.
+- [x] Roles and RLS reliably prevent cross-organization and cross-role data access.
+- [x] All sensitive secrets are server-side and absent from source control.
+- [x] Build, tests, and deployment are green.
+- [x] Deployment URL, environment-variable names (not values), database migration IDs, and unresolved caveats are documented in the final handoff.
