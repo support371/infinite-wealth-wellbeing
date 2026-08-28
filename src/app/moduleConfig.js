@@ -64,7 +64,7 @@ export const modules = {
     ]
   },
   integrations: {
-    title: 'Integrations', description: 'Opt-in connection state and revocation. Secrets remain server-side.', readRoles: ['owner','admin'], writeRoles: ['owner','admin'],
+    title: 'Connected services', description: 'Organization-authorized services surfaced from the central GEM Workspace OS integration estate.', readRoles: ['owner','admin'], writeRoles: ['owner','admin'],
     tabs: [{ key: 'connections', label: 'Connections', table: 'integration_connections', titleField: 'provider', readOnly: true, fields: [] }]
   },
   reports: {
