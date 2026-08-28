@@ -19,48 +19,48 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - Existing Prisma model is in `prisma/schema.prisma`. Review and migrate deliberately; do not create competing data sources.
 
 ## Phase 1 — Discovery and stabilization
-- [ ] Review `README.md`, `package.json`, `vercel.json`, `.env.example`, `prisma/schema.prisma`, and all files under `services/api/src`.
-- [ ] Run the existing install, lint, test, and build commands; document failures and repair baseline issues before feature work.
-- [ ] Inventory current routes/screens and distinguish functional code from mocked/static UI.
-- [ ] Split the oversized `src/App.jsx` only where it improves maintainability; preserve working UI behavior while extracting features, layouts, hooks, and shared components.
+- [x] Review `README.md`, `package.json`, `vercel.json`, `.env.example`, `prisma/schema.prisma`, and all files under `services/api/src`.
+- [x] Run the existing install, lint, test, and build commands; document failures and repair baseline issues before feature work.
+- [x] Inventory current routes/screens and distinguish functional code from mocked/static UI.
+- [x] Split the oversized `src/App.jsx` only where it improves maintainability; preserve working UI behavior while extracting features, layouts, hooks, and shared components.
 
 ## Phase 2 — Separate auth and authorization
-- [ ] Configure IWW-only Supabase client variables in `.env.example`; do not include real secrets.
-- [ ] Implement Supabase Auth sign-in, sign-out, password reset, session restoration, and protected-route handling.
-- [ ] Implement profile onboarding and organization/member association after first sign-in.
-- [ ] Define and enforce roles: `owner`, `admin`, `operations_manager`, `advisor`, `practitioner`, `member`, `family_delegate`.
-- [ ] Enforce authorization twice: server/API-side for every protected mutation/query, and UI-side for navigation/action visibility.
-- [ ] Ensure GEM administrators, staff, and client sessions cannot authenticate into or query IWW by implication.
+- [x] Configure IWW-only Supabase client variables in `.env.example`; do not include real secrets.
+- [x] Implement Supabase Auth sign-in, sign-out, password reset, session restoration, and protected-route handling.
+- [x] Implement profile onboarding and organization/member association after first sign-in.
+- [x] Define and enforce roles: `owner`, `admin`, `operations_manager`, `advisor`, `practitioner`, `member`, `family_delegate`.
+- [x] Enforce authorization twice: server/API-side for every protected mutation/query, and UI-side for navigation/action visibility.
+- [x] Ensure GEM administrators, staff, and client sessions cannot authenticate into or query IWW by implication.
 
 ## Phase 3 — Database and RLS
-- [ ] Create versioned Supabase migrations in the repository before applying production DDL.
-- [ ] Create core tables: profiles, organizations, memberships, invitations, user_preferences, activity_events, audit_events, consents, policy_acknowledgements, notifications.
-- [ ] Create wellbeing tables: wellbeing_plans, wellbeing_checkins, goals, habits, habit_logs, programmes, programme_enrolments, coaching_sessions, appointments, assessments.
-- [ ] Create wealth tables: wealth_plans, wealth_goals, assets, liabilities, cashflow_targets, financial_documents, adviser_tasks, wealth_reviews.
-- [ ] Create collaboration tables: documents, document_access, conversations, messages, tasks, task_assignments, resources, community_posts, comments.
-- [ ] Create commercial and operations tables: subscriptions, billing_records, reports, report_runs, integration_connections, workflow_approvals.
-- [ ] Add `organization_id`, creator/audit fields, foreign keys, check constraints, unique constraints, indexes, and timestamp triggers where appropriate.
-- [ ] Enable RLS on every exposed application table.
-- [ ] Add restrictive membership-based policies: users can access only data belonging to their active IWW organization and allowed role.
-- [ ] Maintain append-only audit events; client/member roles must never be able to alter historical audit data.
-- [ ] Use a server-side service role only in trusted API functions—not in Vite/browser code.
+- [x] Create versioned Supabase migrations in the repository before applying production DDL.
+- [x] Create core tables: profiles, organizations, memberships, invitations, user_preferences, activity_events, audit_events, consents, policy_acknowledgements, notifications.
+- [x] Create wellbeing tables: wellbeing_plans, wellbeing_checkins, goals, habits, habit_logs, programmes, programme_enrolments, coaching_sessions, appointments, assessments.
+- [x] Create wealth tables: wealth_plans, wealth_goals, assets, liabilities, cashflow_targets, financial_documents, adviser_tasks, wealth_reviews.
+- [x] Create collaboration tables: documents, document_access, conversations, messages, tasks, task_assignments, resources, community_posts, comments.
+- [x] Create commercial and operations tables: subscriptions, billing_records, reports, report_runs, integration_connections, workflow_approvals.
+- [x] Add `organization_id`, creator/audit fields, foreign keys, check constraints, unique constraints, indexes, and timestamp triggers where appropriate.
+- [x] Enable RLS on every exposed application table.
+- [x] Add restrictive membership-based policies: users can access only data belonging to their active IWW organization and allowed role.
+- [x] Maintain append-only audit events; client/member roles must never be able to alter historical audit data.
+- [x] Use a server-side service role only in trusted API functions—not in Vite/browser code.
 - [ ] Run Supabase security advisor after each schema iteration and resolve all critical notices.
 
 ## Phase 4 — IWW SaaS application
-- [ ] Build a responsive application shell inspired by GEM operational UX but branded for IWW.
-- [ ] Provide accessible desktop sidebar, mobile navigation, header, global search/command entry, notifications, account menu, and workspace context.
-- [ ] Implement role-specific dashboards: Owner, Admin/Operations, Advisor/Practitioner, Member, Family Delegate.
-- [ ] Implement real loading, empty, validation, error, permission-denied, and offline-retry states for every data screen.
+- [x] Build a responsive application shell inspired by GEM operational UX but branded for IWW.
+- [x] Provide accessible desktop sidebar, mobile navigation, header, global search/command entry, notifications, account menu, and workspace context.
+- [x] Implement role-specific dashboards: Owner, Admin/Operations, Advisor/Practitioner, Member, Family Delegate.
+- [x] Implement real loading, empty, validation, error, permission-denied, and offline-retry states for every data screen.
 - [ ] Build Member Directory and member profile views with explicit consent and role-safe private data sections.
-- [ ] Build Programmes/Cohorts, enrolments, milestones, learning/resources, and progress tracking.
-- [ ] Build Wellbeing: plans, goals, habits, check-ins, assessments, coaching notes, and session scheduling.
-- [ ] Build Wealth: planning goals, assets/liabilities, cash-flow targets, reviews, documents, adviser tasks, and educational resources. Do not present regulated advice, execute trades, or initiate money movement.
+- [x] Build Programmes/Cohorts, enrolments, milestones, learning/resources, and progress tracking.
+- [x] Build Wellbeing: plans, goals, habits, check-ins, assessments, coaching notes, and session scheduling.
+- [x] Build Wealth: planning goals, assets/liabilities, cash-flow targets, reviews, documents, adviser tasks, and educational resources. Do not present regulated advice, execute trades, or initiate money movement.
 - [ ] Build Calendar/Appointments with availability, booking status, reminders, and optional GCal integration behind explicit user consent.
-- [ ] Build secure Documents and sharing permissions.
-- [ ] Build Messages/Conversations with participant authorization.
-- [ ] Build Tasks, approvals, operational reporting, and governance/audit views.
-- [ ] Build Billing/Subscriptions as secure Stripe-backed references; do not expose Stripe secrets client-side.
-- [ ] Build notifications and user-controlled communication preferences.
+- [x] Build secure Documents and sharing permissions.
+- [x] Build Messages/Conversations with participant authorization.
+- [x] Build Tasks, approvals, operational reporting, and governance/audit views.
+- [x] Build Billing/Subscriptions as secure Stripe-backed references; do not expose Stripe secrets client-side.
+- [x] Build notifications and user-controlled communication preferences.
 - [ ] Add an IWW assistant only for navigation, reflection, resource discovery, summaries, and drafting. It must not make medical diagnoses, crisis determinations, regulated investment decisions, or autonomous financial transactions.
 
 ## Phase 5 — Integrations and privacy
@@ -70,16 +70,16 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - [ ] Do not claim HIPAA, financial-regulatory, or other compliance certification without an external legal/compliance review.
 
 ## Phase 6 — Design and quality
-- [ ] Reuse GEM-level information hierarchy and interaction quality, but create distinct IWW copy, palette, identity, and content.
-- [ ] Keep UI accessible: semantic landmarks, keyboard support, visible focus, labels, useful errors, WCAG AA contrast, responsive 375px+ layouts.
+- [x] Reuse GEM-level information hierarchy and interaction quality, but create distinct IWW copy, palette, identity, and content.
+- [x] Keep UI accessible: semantic landmarks, keyboard support, visible focus, labels, useful errors, WCAG AA contrast, responsive 375px+ layouts.
 - [ ] Provide light and dark modes if the existing IWW design system supports them; avoid regressions.
-- [ ] Add unit/integration tests for RBAC, protected routes, tenant isolation, sensitive-record access, major workflows, and API validation.
-- [ ] Run lint, tests, type/build checks, and production build before every deploy.
-- [ ] Scan any proposed commit for secrets before push.
+- [x] Add unit/integration tests for RBAC, protected routes, tenant isolation, sensitive-record access, major workflows, and API validation.
+- [x] Run lint, tests, type/build checks, and production build before every deploy.
+- [x] Scan any proposed commit for secrets before push.
 
 ## Phase 7 — Deployment
-- [ ] Keep `support371/infinite-wealth-wellbeing` as the sole source repository.
-- [ ] Link/reuse the separate Vercel project for this repository only.
+- [x] Keep `support371/infinite-wealth-wellbeing` as the sole source repository.
+- [x] Link/reuse the separate Vercel project for this repository only.
 - [ ] Configure Production/Preview/Development environment variables separately.
 - [ ] Configure IWW Auth redirect URLs only after the final deployment URL is known.
 - [ ] Deploy a preview first, inspect build and runtime logs, then promote/deploy production only after passing checks.

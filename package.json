@@ -1,1 +1,46 @@
-{"name":"infinite-wealth-wellbeing","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite","build":"vite build","preview":"vite preview","api":"node services/api/src/index.js"},"dependencies":{"@vitejs/plugin-react":"latest","vite":"latest","react":"latest","react-dom":"latest","react-router-dom":"latest","lucide-react":"latest","express":"latest","cors":"latest","helmet":"latest","zod":"latest"},"devDependencies":{}}
+{
+  "name": "infinite-wealth-wellbeing",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "api": "node services/api/src/index.js",
+    "lint": "eslint . --max-warnings=0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run lint && npm run test && npm run build",
+    "security:secrets": "node scripts/secret-scan.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.57.4",
+    "cors": "2.8.5",
+    "express": "5.1.0",
+    "helmet": "8.1.0",
+    "lucide-react": "0.544.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "react-router-dom": "7.18.2",
+    "zod": "4.1.11"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.36.0",
+    "@testing-library/jest-dom": "6.8.0",
+    "@testing-library/react": "16.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "eslint": "9.36.0",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "eslint-plugin-react-refresh": "0.4.22",
+    "globals": "16.4.0",
+    "jsdom": "27.0.0",
+    "supabase": "2.116.0",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  }
+}

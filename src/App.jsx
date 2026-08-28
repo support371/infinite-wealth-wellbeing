@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Link, NavLink, useLocation, useParams } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import {
   Heart, Shield, Star, Users, BookOpen, Award, TrendingUp, Globe,
   ArrowRight, CheckCircle, ChevronRight, ChevronDown, Mail, Phone,
-  MapPin, Clock, Leaf, Feather, Wind, Flame, Gift, Lock, Search,
+  MapPin, Clock, Leaf, Feather, Wind, Gift, Lock,
   BarChart2, Briefcase, FileText, Layers, Activity, Sun, DollarSign,
   Home as HomeIcon, AlertCircle, Zap, Target, PieChart, UserCheck
 } from 'lucide-react';
@@ -210,6 +209,7 @@ function Navbar() {
           {/* Nav actions */}
           <div className="nav-actions">
             <Link to="/donate" className="btn btn-outline-gold btn-sm">Donate</Link>
+            <Link to="/auth/sign-in" className="btn btn-outline-gold btn-sm">Sign In</Link>
             <Link to="/membership/apply" className="btn btn-gold btn-sm">Join Now</Link>
           </div>
 
@@ -251,6 +251,9 @@ function Navbar() {
           </div>
         ))}
         <div className="mobile-menu-footer">
+          <Link to="/auth/sign-in" className="btn btn-ghost btn-lg" style={{ justifyContent: 'center' }}>
+            <Lock size={16}/> Member Sign In
+          </Link>
           <Link to="/donate" className="btn btn-ghost btn-lg" style={{ justifyContent: 'center' }}>
             <Gift size={16}/> Donate
           </Link>
@@ -1551,9 +1554,9 @@ if (typeof document !== 'undefined') {
 /* ═══════════════════════════════════════════════
    ROUTER — every route has a dedicated page
 ═══════════════════════════════════════════════ */
-function App() {
+export default function PublicSite() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollTop/>
       <Routes>
         {/* Home */}
@@ -1614,8 +1617,6 @@ function App() {
         {/* 404 fallback */}
         <Route path="*" element={<Home/>}/>
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }
-
-createRoot(document.getElementById('root')).render(<App/>);
