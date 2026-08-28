@@ -1,29 +1,44 @@
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { z } from 'zod';
+import { authenticateRequest } from './auth.js';
+import { auditAfter } from './audit.js';
+import { getPersistenceMode, repositories } from './repositories.js';
+import { requirePermission } from './rbac.js';
 
-const app = express();
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
+export const app = express();
+app.disable('x-powered-by');
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({ origin(origin, callback) {
+  const allowed = (process.env.APP_ORIGINS || '').split(',').map((item)=>item.trim()).filter(Boolean);
+  if (!origin || allowed.includes(origin) || /^https:\/\/infinite-wealth-wellbeing(?:-[a-z0-9-]+)?\.vercel\.app$/.test(origin)) callback(null, true);
+  else callback(new Error('origin_not_allowed'));
+}}));
+app.use(express.json({ limit: '256kb' }));
+app.use((req,_res,next)=>{req.id=req.headers['x-request-id']||crypto.randomUUID();next();});
 
-const ok = (module) => ({ status: 'ready', module, note: 'Scaffold endpoint. Connect database and auth before production.' });
+app.get('/api/health', (_req, res) => res.json({ status:'ok', service:'iww-api', persistence:getPersistenceMode(), project:'fepfnzrpftxpxlgyujev' }));
 
-app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'infinite-platform-api' }));
-app.get('/api/services', (_req, res) => res.json(ok('service-catalog')));
-app.post('/api/inquiries', (req, res) => {
-  const schema = z.object({ fullName: z.string().min(1), email: z.string().email(), message: z.string().min(1) });
-  const parsed = schema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'invalid_inquiry', details: parsed.error.flatten() });
-  res.status(202).json({ status: 'accepted', workflow: 'inquiry.received' });
+const protectedApi = express.Router();
+protectedApi.use(authenticateRequest);
+protectedApi.get('/session', (req,res)=>res.json({ userId:req.user.id, organizationId:req.organizationId, role:req.membership.role }));
+protectedApi.get('/programmes', requirePermission('member.read'), async (req,res,next)=>{try{res.json({data:await repositories.programmes.list(req)});}catch(e){next(e);}});
+protectedApi.post('/programmes', requirePermission('programme.manage'), auditAfter('programme.create','programme'), async(req,res,next)=>{try{const parsed=z.object({title:z.string().min(2).max(160),description:z.string().max(5000).optional(),programme_type:z.string().min(2).max(80)}).parse(req.body);res.status(201).json({data:await repositories.programmes.create(req,parsed)});}catch(e){next(e);}});
+app.use('/api/v1', protectedApi);
+
+app.use((error,req,res,_next)=>{
+  if (error instanceof z.ZodError) return res.status(400).json({error:'validation_failed',details:error.flatten(),requestId:req.id});
+  console.error('[request-failed]',req.id,error.message);
+  return res.status(500).json({error:'internal_error',requestId:req.id});
 });
-app.post('/api/membership/applications', (_req, res) => res.status(202).json({ status:'accepted', workflow:'membership.application.submitted' }));
-app.post('/api/practitioners/applications', (_req, res) => res.status(202).json({ status:'accepted', workflow:'practitioner.application.submitted' }));
-app.post('/api/compliance/records', (_req, res) => res.status(202).json({ status:'accepted', workflow:'compliance.record.submitted' }));
-app.post('/webhooks/form-submitted', (_req, res) => res.json({ received:true, event:'form.submitted' }));
-app.post('/webhooks/donation-completed', (_req, res) => res.json({ received:true, event:'donation.completed' }));
-app.post('/webhooks/policy-approved', (_req, res) => res.json({ received:true, event:'policy.approved' }));
 
-const port = process.env.PORT || 8787;
-app.listen(port, () => console.log(`Infinite API listening on ${port}`));
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+if (isDirectRun) {
+  const port = Number(process.env.PORT || 8787);
+  app.listen(port,()=>console.log(`IWW API listening on ${port}`));
+}
+
+export default app;

@@ -1,47 +1,22 @@
-const memoryStore = {
-  inquiries: [],
-  membershipApplications: [],
-  practitionerApplications: [],
-  complianceRecords: [],
-  workflowEvents: [],
-  auditLogs: []
-};
-
-function createRecord(collection, data) {
-  const record = {
-    id: crypto.randomUUID(),
-    ...data,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+function repository(table) {
+  return {
+    async create(req, data) {
+      const { data: record, error } = await req.supabase.from(table).insert({ ...data, organization_id: req.organizationId, created_by: req.user.id }).select().single();
+      if (error) throw error;
+      return record;
+    },
+    async list(req, { limit = 100 } = {}) {
+      const { data, error } = await req.supabase.from(table).select('*').eq('organization_id', req.organizationId).limit(Math.min(limit, 100));
+      if (error) throw error;
+      return data;
+    }
   };
-  memoryStore[collection].push(record);
-  return record;
 }
 
 export const repositories = {
-  inquiries: {
-    create: (data) => createRecord('inquiries', data)
-  },
-  membershipApplications: {
-    create: (data) => createRecord('membershipApplications', data)
-  },
-  practitionerApplications: {
-    create: (data) => createRecord('practitionerApplications', data)
-  },
-  complianceRecords: {
-    create: (data) => createRecord('complianceRecords', data)
-  },
-  workflowEvents: {
-    create: (data) => createRecord('workflowEvents', data)
-  },
-  auditLogs: {
-    create: (data) => createRecord('auditLogs', data)
-  }
+  programmes: repository('programmes'), reports: repository('reports'), tasks: repository('tasks'), resources: repository('resource_library_items')
 };
 
 export function getPersistenceMode() {
-  return {
-    mode: 'memory-scaffold',
-    next: 'Replace repository functions with Prisma Client calls in Release 2D.'
-  };
+  return { mode: 'supabase-production', tenantIsolation: 'organization_id + RLS', audit: 'append-only' };
 }
