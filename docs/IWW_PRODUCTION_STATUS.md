@@ -11,8 +11,8 @@
 
 - Production URL: `https://infinite-wealth-wellbeing.vercel.app`
 - Vercel project: `prj_jGTfkgIDvRud6bGaDgCuZPlSCy1S`
-- Production commit: `b279a91131d628bda05a9e5614f4b22a2af5f433`
-- Production deployment: `y7UpmWxkHtSLFGUA5NUTYxUuJkd8` (Ready and aliased to the production URL).
+- Application implementation commit: `b279a91131d628bda05a9e5614f4b22a2af5f433`
+- Production target is Ready and aliased to the production URL; documentation-only merges may create newer deployment IDs without changing the application implementation.
 - Public and SPA routes return `200` with security headers; `/api/health` reports `supabase-production` and the dedicated project reference.
 
 ## Database activation and security
