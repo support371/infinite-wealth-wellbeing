@@ -14,7 +14,7 @@ const SettingsPage = lazy(() => import('./app/SettingsPage'));
 const AuthPage = lazy(() => import('./auth/AuthPage'));
 const OnboardingPage = lazy(() => import('./auth/OnboardingPage'));
 const WorkspaceSelectorPage = lazy(() => import('./app/WorkspaceSelectorPage'));
-const IntegrationMarketplacePage = lazy(() => import('./app/IntegrationMarketplacePage'));
+const ConnectedServicesPage = lazy(() => import('./app/ConnectedServicesPage'));
 const PlatformPage = lazy(() => import('./app/PlatformPage'));
 
 export default function AppRoutes() {
@@ -27,7 +27,7 @@ export default function AppRoutes() {
     <Route path="/w/:organizationSlug" element={<ProtectedRoute><TenantWorkspaceGate><AppShell/></TenantWorkspaceGate></ProtectedRoute>}>
       <Route index element={<DashboardPage/>}/>
       {['wellbeing','wealth','programmes','appointments','documents','tasks','resources','community','team','governance','reports','billing'].map(key=><Route key={key} path={key} element={<EntityWorkspace moduleKey={key}/>}/>) }
-      <Route path="integrations" element={<IntegrationMarketplacePage/>}/>
+      <Route path="integrations" element={<ConnectedServicesPage/>}/>
       <Route path="messages" element={<MessagesPage/>}/>
       <Route path="assistant" element={<AssistantPage/>}/>
       <Route path="settings" element={<SettingsPage/>}/>

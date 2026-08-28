@@ -103,13 +103,17 @@ export function AuthProvider({ children }) {
     await loadUser();
   };
 
-  const createOrganization = async ({ name, slug }) => {
+  const createOrganization = async ({ name, slug, engagementType, projectName, projectSummary, managementMode }) => {
     const client = requireSupabase();
     const normalizedSlug = slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const { data: organization, error } = await client
-      .rpc('create_organization_with_owner', {
+      .rpc('create_managed_organization_with_owner', {
         p_name: name.trim(),
-        p_slug: normalizedSlug
+        p_slug: normalizedSlug,
+        p_engagement_type: engagementType,
+        p_project_name: projectName.trim(),
+        p_project_summary: projectSummary.trim(),
+        p_management_mode: managementMode
       })
       .single();
     if (error) throw error;

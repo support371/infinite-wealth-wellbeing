@@ -5,6 +5,7 @@ const sql = readFileSync(new URL('../supabase/migrations/20260828040315_iww_prod
 const organizationBootstrapSql = readFileSync(new URL('../supabase/migrations/20260828173907_create_organization_with_owner.sql', import.meta.url),'utf8').toLowerCase();
 const authContext = readFileSync(new URL('../src/auth/AuthContext.jsx', import.meta.url),'utf8');
 const platformSql = readFileSync(new URL('../supabase/migrations/20260828181545_platform_plane_and_integration_catalog.sql', import.meta.url),'utf8').toLowerCase();
+const managedIntakeSql = readFileSync(new URL('../supabase/migrations/20260828220039_managed_organization_intake.sql', import.meta.url),'utf8').toLowerCase();
 
 describe('IWW Supabase production migration', () => {
   it('forces RLS on all public application tables', () => {
@@ -57,8 +58,21 @@ describe('IWW Supabase production migration', () => {
     expect(organizationBootstrapSql).toContain('security invoker');
     expect(organizationBootstrapSql).toContain('revoke all on function public.create_organization_with_owner(text, text) from public, anon');
     expect(organizationBootstrapSql).toContain('grant execute on function public.create_organization_with_owner(text, text) to authenticated');
-    expect(authContext).toContain(".rpc('create_organization_with_owner'");
+    expect(authContext).toContain(".rpc('create_managed_organization_with_owner'");
     expect(authContext).not.toContain(".from('organizations')\n      .insert");
+  });
+
+  it('creates the managed organization and intake atomically behind RLS', () => {
+    expect(managedIntakeSql).toContain('create table public.organization_service_intakes');
+    expect(managedIntakeSql).toContain('alter table public.organization_service_intakes enable row level security');
+    expect(managedIntakeSql).toContain('alter table public.organization_service_intakes force row level security');
+    expect(managedIntakeSql).toContain('private.has_org_role');
+    expect(managedIntakeSql).toContain('insert into public.organizations');
+    expect(managedIntakeSql).toContain('insert into public.memberships');
+    expect(managedIntakeSql).toContain('insert into public.organization_service_intakes');
+    expect(managedIntakeSql).toContain('create or replace function public.create_managed_organization_with_owner');
+    expect(managedIntakeSql).toContain('security invoker');
+    expect(managedIntakeSql).toContain('revoke insert, delete on public.organization_service_intakes from authenticated, anon');
   });
 
   it('separates internal platform staff from client organization roles', () => {
