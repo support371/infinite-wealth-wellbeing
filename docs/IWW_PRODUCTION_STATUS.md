@@ -7,6 +7,13 @@
 - Vercel target: `infinite-wealth-wellbeing` (`prj_jGTfkgIDvRud6bGaDgCuZPlSCy1S`)
 - No GEM database, session, user, source or deployment dependency is used.
 
+## Deployment
+
+- Production URL: `https://infinite-wealth-wellbeing.vercel.app`
+- Vercel project: `prj_jGTfkgIDvRud6bGaDgCuZPlSCy1S`
+- Production commit: `e9a1be224ed9602623354e119776d83cfdf3a9d7`
+- Public and SPA routes: deployed and returning `200` with security headers.
+
 ## Implemented
 
 - Supabase password auth, PKCE recovery, session restoration, sign-out and protected routes.
