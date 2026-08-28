@@ -104,21 +104,13 @@ export function AuthProvider({ children }) {
   const createOrganization = async ({ name, slug }) => {
     const client = requireSupabase();
     const normalizedSlug = slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const { data: organization, error: orgError } = await client
-      .from('organizations')
-      .insert({ name: name.trim(), slug: normalizedSlug, created_by: state.user.id })
-      .select()
+    const { data: organization, error } = await client
+      .rpc('create_organization_with_owner', {
+        p_name: name.trim(),
+        p_slug: normalizedSlug
+      })
       .single();
-    if (orgError) throw orgError;
-    const { error: membershipError } = await client.from('memberships').insert({
-      organization_id: organization.id,
-      user_id: state.user.id,
-      role: 'owner',
-      status: 'active',
-      joined_at: new Date().toISOString(),
-      created_by: state.user.id
-    });
-    if (membershipError) throw membershipError;
+    if (error) throw error;
     await loadUser();
     selectOrganization(organization.id);
     return organization;
