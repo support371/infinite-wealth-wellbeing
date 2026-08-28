@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "release": "production-v1",
+  "updatedAt": "2026-08-09",
+  "gates": [
+    {
+      "id": "safe_public_routing",
+      "title": "Safe public routing",
+      "status": "implemented",
+      "requiredForLaunch": true,
+      "evidence": ["vercel.json routes unreviewed public paths to prelaunch.html", "api/release-config.test.js"]
+    },
+    {
+      "id": "validated_public_intake",
+      "title": "Validated contact and membership-interest intake",
+      "status": "implemented",
+      "requiredForLaunch": true,
+      "evidence": ["api/inquiries.js", "api/membership-applications.js", "shared/submission-contracts.js", "src/production/submission.jsx"]
+    },
+    {
+      "id": "durable_persistence_code",
+      "title": "Durable idempotent persistence architecture",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["server/persistence.js", "supabase/migrations/20260809060000_iww_production_core.sql", "supabase/migrations/20260809061000_iww_atomic_intake.sql", "api/persistence.test.js", "api/data-model.test.js"],
+      "blocker": "Dedicated or explicitly approved IWW database has not been selected; migrations and live persistence verification are therefore not yet complete."
+    },
+    {
+      "id": "dedicated_database",
+      "title": "Dedicated production database and authentication boundary",
+      "status": "blocked_external",
+      "requiredForLaunch": true,
+      "evidence": ["supabase/README.md", "ops/PRODUCTION_ACTIVATION_RUNBOOK.md"],
+      "blocker": "Existing connected Supabase projects contain GEM/GemAssist schemas and were intentionally not reused. A dedicated or explicitly approved IWW project must be selected."
+    },
+    {
+      "id": "notification_outbox",
+      "title": "Durable staff-notification outbox and retry worker",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["supabase/migrations/20260809064000_iww_notification_outbox.sql", "supabase/migrations/20260809065000_iww_outbox_delivery_guard.sql", "api/internal/notification-worker.js", "api/worker.test.js", "api/outbox-model.test.js", "api/outbox-evidence.test.js"],
+      "blocker": "Requires the dedicated IWW database, worker secret, scheduled invocation, live signed workflow destinations, and retry/dead-letter verification."
+    },
+    {
+      "id": "staff_notification",
+      "title": "Signed staff notification workflow",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["server/http.js", "server/persistence.js", "api/internal/notification-worker.js"],
+      "blocker": "Protected webhook URLs and signing secret must be configured and successful live delivery must be evidenced."
+    },
+    {
+      "id": "transactional_email",
+      "title": "Transactional email queue, worker, adapter boundary, and delivery audit",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["supabase/migrations/20260809069000_iww_transactional_email_outbox.sql", "server/email-adapter.js", "api/internal/email-worker.js", "api/email-outbox-model.test.js", "api/email-worker.test.js", "ops/TRANSACTIONAL_EMAIL_CONTRACT.md"],
+      "blocker": "Queue/worker/adapter contracts are prepared; a verified sender domain, approved provider-facing adapter, approved template copy, scheduler configuration, and live signed delivery/retry evidence remain required."
+    },
+    {
+      "id": "admin_review",
+      "title": "Authenticated administrative review queue, rationale guard, and audit history",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["api/admin/submissions.js", "api/admin/history.js", "src/admin/AdminApp.jsx", "src/admin/HistoryApp.jsx", "admin.html", "admin-history.html", "supabase/migrations/20260809062000_iww_staff_review.sql", "supabase/migrations/20260809071000_iww_terminal_review_reason_guard.sql", "api/admin.test.js", "api/review-reason-guard.test.js", "api/release-config.test.js"],
+      "blocker": "Requires the approved IWW Auth/database project, browser-safe publishable configuration, staff Auth users, role assignment, and live queue/history/rationale verification."
+    },
+    {
+      "id": "staff_role_governance",
+      "title": "Controlled reviewer/admin role lifecycle",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["api/admin/staff.js", "supabase/migrations/20260809066000_iww_staff_role_management.sql", "supabase/migrations/20260809067000_iww_staff_role_evidence_guard.sql", "api/staff-management.test.js", "api/staff-evidence.test.js"],
+      "blocker": "Initial staff identities and the first controlled administrator assignment cannot be verified until the dedicated IWW Auth project exists."
+    },
+    {
+      "id": "operational_readiness",
+      "title": "Protected deep operational readiness and aggregate queue health",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["api/internal/readiness.js", "api/readiness.test.js", "supabase/migrations/20260809070000_iww_operational_snapshot.sql", "api/operational-snapshot.test.js", "ops/PRODUCTION_ENVIRONMENT.md"],
+      "blocker": "The probe and non-PII snapshot are prepared, but live readiness cannot clear until the dedicated schema, workflow/email secrets, workers, adapters, and queue health are verified in the activated environment."
+    },
+    {
+      "id": "abuse_protection",
+      "title": "Layered public-intake abuse protection",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["api/inquiries.js", "api/membership-applications.js", "supabase/migrations/20260809068000_iww_intake_throttle.sql", "api/intake-throttle.test.js"],
+      "blocker": "Application/database controls are prepared; production edge/WAF rate limiting and live abuse testing remain provider configuration work."
+    },
+    {
+      "id": "incident_response",
+      "title": "Evidence-preserving incident response and recovery procedure",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["ops/INCIDENT_RESPONSE_RUNBOOK.md", "api/incident-response-contract.test.js", "SECURITY_THREAT_MODEL.md", "ops/PRODUCTION_ACTIVATION_RUNBOOK.md"],
+      "blocker": "Technical containment/recovery procedures are prepared; a non-production incident-response drill, named operational ownership, provider-specific escalation contacts, and applicable legal/privacy review path remain required."
+    },
+    {
+      "id": "legal_policy",
+      "title": "Reviewed legal, privacy, membership, refund, and disclaimer surfaces",
+      "status": "blocked_external",
+      "requiredForLaunch": true,
+      "evidence": ["trust-center.html", "PUBLIC_CLAIM_AUDIT.md"],
+      "blocker": "Policies and entity-specific legal review have not been supplied or approved."
+    },
+    {
+      "id": "public_claims",
+      "title": "Health, financial, ministry/tax, credential, testimonial, and impact claims substantiated",
+      "status": "blocked_external",
+      "requiredForLaunch": true,
+      "evidence": ["PUBLIC_CLAIM_AUDIT.md"],
+      "blocker": "Evidence owners and substantiation are incomplete; legacy service routes remain gated."
+    },
+    {
+      "id": "payments",
+      "title": "Hosted tokenized payment and donation workflow",
+      "status": "blocked_external",
+      "requiredForLaunch": false,
+      "evidence": ["donate.html"],
+      "blocker": "Provider, pricing/donation treatment, receipts, refunds, and webhook rules are not approved. Payment collection remains disabled."
+    },
+    {
+      "id": "backup_recovery",
+      "title": "Backup, restore, retention, and deletion procedures",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["supabase/verification/restore_acceptance.sql", "ops/BACKUP_RECOVERY_RUNBOOK.md", "api/recovery-contract.test.js", "supabase/README.md"],
+      "blocker": "Read-only restore acceptance and drill procedure are prepared; provider backup/PITR configuration, approved RPO/RTO/retention decisions, and a successful restore drill remain required."
+    },
+    {
+      "id": "function_budget",
+      "title": "Vercel serverless function budget",
+      "status": "prepared",
+      "requiredForLaunch": true,
+      "evidence": ["server/", "api/function-budget.test.js", "vercel.json"],
+      "blocker": "Shared helpers live outside api/ and the source budget is ten intentional handlers, below the Hobby cap of twelve; a fresh successful Vercel deployment is required to verify provider-side counting."
+    },
+    {
+      "id": "ci_deploy_evidence",
+      "title": "CI and deployment evidence",
+      "status": "in_progress",
+      "requiredForLaunch": true,
+      "evidence": [".github/workflows/production-ci.yml", ".github/workflows/production-completion-ci.yml", "vercel.json", "package.json"],
+      "blocker": "Vercel previously proved the full test/build phase can succeed; current head deployments are temporarily build-rate-limited, and GitHub Actions jobs are still failing before any steps begin."
+    },
+    {
+      "id": "e2e_accessibility_security",
+      "title": "End-to-end, accessibility, mobile, performance, and security verification",
+      "status": "in_progress",
+      "requiredForLaunch": true,
+      "evidence": ["api/*.test.js", "SECURITY_THREAT_MODEL.md"],
+      "blocker": "Automated contract coverage exists; live end-to-end, assistive-technology, mobile, performance, incident, and production security verification require activated provider environments."
+    }
+  ]
+}

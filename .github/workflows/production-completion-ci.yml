@@ -1,0 +1,51 @@
+name: Production Completion CI
+
+on:
+  push:
+    branches:
+      - feat/production-completion
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
+
+      - name: Run every production test
+        run: npm run test:production
+
+      - name: Build all configured Vite entrypoints
+        run: npm run build
+
+      - name: Verify expected release output
+        shell: bash
+        run: |
+          test -f dist/index.html
+          test -f dist/prelaunch.html
+          test -f dist/contact.html
+          test -f dist/membership-apply.html
+          test -f dist/donate.html
+          test -f dist/trust-center.html
+          test -f dist/admin.html
+          test -f dist/admin-history.html
+          test -d dist/assets
+
+      - name: Print release gate status
+        run: npm run release:status

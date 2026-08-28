@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Donation availability status for Infinite Wealth & Well-being." />
+    <title>Donations | Infinite Wealth & Well-being</title>
+    <link rel="stylesheet" href="/src/production/status.css" />
+  </head>
+  <body>
+    <main class="status-shell">
+      <a class="status-brand" href="/">
+        <span class="status-mark">IW</span>
+        <span><strong>Infinite Wealth</strong><small>&amp; Well-being</small></span>
+      </a>
+
+      <section class="status-hero">
+        <span class="status-eyebrow">Donation status</span>
+        <h1>Contribution checkout is not active yet.</h1>
+        <p>The production platform is being completed with a hosted, tokenized payment requirement. Until a verified provider, receipt workflow, and organization/tax treatment are confirmed, this site will not collect payment-card information or pretend a donation has been completed.</p>
+      </section>
+
+      <div class="status-banner"><strong>No payment data is collected on this page.</strong> Do not send card details, bank credentials, or other payment secrets through the contact form.</div>
+
+      <section class="status-grid">
+        <article class="status-card status-good">
+          <h2>Already enforced</h2>
+          <ul>
+            <li>No raw card fields are presented.</li>
+            <li>The browser payment permission is disabled by site policy headers.</li>
+            <li>Donation questions can be routed through the validated contact workflow.</li>
+          </ul>
+        </article>
+        <article class="status-card status-blocked">
+          <h2>Required before activation</h2>
+          <ul>
+            <li>Hosted/tokenized payment provider selected and configured.</li>
+            <li>Signed, idempotent payment webhook processing.</li>
+            <li>Receipt and reconciliation workflow.</li>
+            <li>Verified refund/cancellation and tax/receipt language.</li>
+          </ul>
+        </article>
+      </section>
+
+      <div class="status-actions">
+        <a class="status-button" href="/contact">Ask a donation question</a>
+        <a class="status-button secondary" href="/">Return to the main site</a>
+      </div>
+
+      <p class="status-foot">This gate is intentional: financial collection stays disabled until the operational and compliance dependencies are real, not merely designed.</p>
+    </main>
+  </body>
+</html>

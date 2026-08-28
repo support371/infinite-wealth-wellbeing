@@ -1,0 +1,60 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1c241f;
+  background: #f4f0e7;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; background: #f4f0e7; }
+button, input, textarea, select { font: inherit; }
+
+.submission-shell { min-height: 100vh; max-width: 1180px; margin: 0 auto; padding: 34px 24px 72px; }
+.submission-brand { display:inline-flex; align-items:center; gap:11px; color:#1c241f; text-decoration:none; margin-bottom:48px; }
+.submission-brand > span:last-child { display:grid; line-height:1.05; }
+.submission-brand strong { font-family: Georgia, serif; font-size:1.05rem; letter-spacing:.01em; }
+.submission-brand small { margin-top:3px; font-size:.72rem; text-transform:uppercase; letter-spacing:.13em; color:#657169; }
+.submission-mark { width:42px; height:42px; display:grid; place-items:center; border:1px solid #9b7c3b; border-radius:50%; color:#7b5c21; font-family:Georgia,serif; font-weight:700; }
+
+.submission-layout { display:grid; grid-template-columns:minmax(0,.9fr) minmax(420px,1.15fr); gap:70px; align-items:start; }
+.submission-intro { padding:44px 0; position:sticky; top:24px; }
+.submission-eyebrow { display:block; color:#6f5827; font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.14em; }
+.submission-intro h1 { margin:14px 0 18px; max-width:610px; font-family:Georgia,serif; font-weight:500; font-size:clamp(2.7rem,5.5vw,5.7rem); line-height:.95; letter-spacing:-.045em; }
+.submission-intro > p { max-width:600px; margin:0; color:#5d6861; font-size:1.03rem; line-height:1.75; }
+.submission-safety-note { display:grid; gap:6px; margin-top:30px; padding:16px 18px; border-left:3px solid #85692f; background:rgba(255,255,255,.55); color:#4f5b54; line-height:1.55; }
+.submission-safety-note strong { color:#29352e; }
+.submission-back { display:inline-block; margin-top:26px; color:#3f624e; font-weight:750; text-decoration:none; }
+
+.submission-card { padding:34px; background:#fffdf8; border:1px solid #d8d1c2; border-radius:24px; box-shadow:0 18px 55px rgba(49,55,51,.08); }
+.submission-card h2 { margin:0 0 8px; font-family:Georgia,serif; font-size:2rem; font-weight:500; }
+.submission-card-copy { margin:0 0 26px; color:#6c756f; line-height:1.6; }
+.submission-form { display:grid; gap:17px; }
+.submission-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.submission-form label:not(.submission-consent) { display:grid; gap:7px; color:#38463e; font-size:.83rem; font-weight:750; }
+.submission-form input:not([type="checkbox"]), .submission-form textarea, .submission-form select { width:100%; border:1px solid #cfc8ba; border-radius:11px; padding:12px 13px; background:#fff; color:#202923; outline:none; }
+.submission-form textarea { resize:vertical; min-height:118px; line-height:1.5; }
+.submission-form input:focus, .submission-form textarea:focus, .submission-form select:focus { border-color:#4f725d; box-shadow:0 0 0 3px rgba(79,114,93,.12); }
+.submission-consent { display:flex; align-items:flex-start; gap:10px; color:#4f5c55; font-size:.86rem; line-height:1.55; }
+.submission-consent input { margin-top:4px; width:17px; height:17px; accent-color:#345a43; flex:none; }
+.submission-submit { border:0; border-radius:11px; padding:13px 17px; background:#244a35; color:white; font-weight:800; cursor:pointer; transition:transform .12s ease, opacity .12s ease; }
+.submission-submit:hover:not(:disabled) { transform:translateY(-1px); }
+.submission-submit:disabled { opacity:.58; cursor:not-allowed; }
+.submission-status { border-radius:10px; padding:12px 13px; font-size:.9rem; line-height:1.5; }
+.submission-status-loading { background:#eef1ec; color:#45564c; }
+.submission-status-success { background:#e2efe5; color:#285437; border:1px solid #bdd6c4; }
+.submission-status-error { background:#f7e9e6; color:#7b3028; border:1px solid #e6c4be; }
+.submission-field-error { color:#a13d34; font-weight:650; }
+.submission-honeypot { position:absolute; left:-99999px; width:1px; height:1px; overflow:hidden; }
+
+@media (max-width: 860px) {
+  .submission-layout { grid-template-columns:1fr; gap:24px; }
+  .submission-intro { position:static; padding:12px 0 10px; }
+  .submission-brand { margin-bottom:28px; }
+}
+
+@media (max-width: 560px) {
+  .submission-shell { padding:22px 15px 50px; }
+  .submission-card { padding:22px 17px; border-radius:18px; }
+  .submission-row { grid-template-columns:1fr; }
+  .submission-intro h1 { font-size:3rem; }
+}

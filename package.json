@@ -1,1 +1,29 @@
-{"name":"infinite-wealth-wellbeing","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite","build":"vite build","preview":"vite preview","api":"node services/api/src/index.js"},"dependencies":{"@vitejs/plugin-react":"latest","vite":"latest","react":"latest","react-dom":"latest","react-router-dom":"latest","lucide-react":"latest","express":"latest","cors":"latest","helmet":"latest","zod":"latest"},"devDependencies":{}}
+{
+  "name": "infinite-wealth-wellbeing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "api": "node services/api/src/index.js",
+    "test:production": "node --test api/*.test.js",
+    "release:status": "node scripts/check-release-gates.mjs",
+    "release:strict": "node scripts/check-release-gates.mjs --strict"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "latest",
+    "lucide-react": "latest",
+    "express": "latest",
+    "cors": "latest",
+    "helmet": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {}
+}
