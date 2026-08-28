@@ -2,7 +2,8 @@
 -- Project target: fepfnzrpftxpxlgyujev. This schema has no GEM dependencies.
 
 create extension if not exists pgcrypto;
-create extension if not exists citext;
+create schema if not exists extensions;
+create extension if not exists citext with schema extensions;
 create schema if not exists private;
 revoke all on schema private from public, anon;
 grant usage on schema private to authenticated;
@@ -54,7 +55,7 @@ create index memberships_org_role_idx on public.memberships(organization_id, rol
 create table public.invitations (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
-  email citext not null,
+  email extensions.citext not null,
   role public.app_role not null,
   token_hash text not null unique,
   status text not null default 'pending' check (status in ('pending','accepted','expired','revoked')),
@@ -502,7 +503,7 @@ declare t text;
 begin
   foreach t in array array[
     'wellbeing_plans','wellbeing_checkins','goals','habits','habit_logs','programme_enrolments','coaching_sessions','appointments','assessments',
-    'wealth_plans','wealth_goals','assets','liabilities','cashflow_targets','financial_documents','adviser_tasks','wealth_reviews'
+    'wealth_plans','wealth_goals','assets','liabilities','cashflow_targets','adviser_tasks','wealth_reviews'
   ] loop
     execute format('create policy %I on public.%I for select to authenticated using (private.can_access_member(organization_id, member_id, %L))', t||'_select', t, t);
     execute format('create policy %I on public.%I for insert to authenticated with check (private.can_access_member(organization_id, member_id, %L) and created_by = (select auth.uid()))', t||'_insert', t, t);
@@ -510,6 +511,21 @@ begin
     execute format('create policy %I on public.%I for delete to authenticated using (member_id = (select auth.uid()) or private.has_org_role(organization_id, array[''owner'',''admin'']::public.app_role[]))', t||'_delete', t);
   end loop;
 end $$;
+
+create policy financial_documents_select on public.financial_documents for select to authenticated using (
+  private.can_access_member(organization_id, member_id, 'financial_documents')
+);
+create policy financial_documents_insert on public.financial_documents for insert to authenticated with check (
+  private.can_access_member(organization_id, member_id, 'financial_documents') and uploaded_by = (select auth.uid())
+);
+create policy financial_documents_update on public.financial_documents for update to authenticated using (
+  private.can_access_member(organization_id, member_id, 'financial_documents')
+) with check (
+  private.can_access_member(organization_id, member_id, 'financial_documents')
+);
+create policy financial_documents_delete on public.financial_documents for delete to authenticated using (
+  member_id = (select auth.uid()) or private.has_org_role(organization_id, array['owner','admin']::public.app_role[])
+);
 
 create policy programmes_select on public.programmes for select to authenticated using (private.is_org_member(organization_id));
 create policy programmes_write on public.programmes for all to authenticated using (
