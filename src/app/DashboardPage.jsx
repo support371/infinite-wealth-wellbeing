@@ -4,18 +4,19 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { requireSupabase } from '../lib/supabase';
 import { staffRoles } from './moduleConfig';
+import { workspacePath } from './workspaceRoutes';
 
 const memberCards = [
-  { table: 'goals', label: 'Active goals', icon: TrendingUp, link: '/app/wellbeing', filter: ['status','active'] },
-  { table: 'habits', label: 'Habits', icon: HeartPulse, link: '/app/wellbeing', filter: ['status','active'] },
-  { table: 'appointments', label: 'Appointments', icon: CalendarDays, link: '/app/appointments' },
-  { table: 'tasks', label: 'Open tasks', icon: ListTodo, link: '/app/tasks', filter: ['status','open'] }
+  { table: 'goals', label: 'Active goals', icon: TrendingUp, path: 'wellbeing', filter: ['status','active'] },
+  { table: 'habits', label: 'Habits', icon: HeartPulse, path: 'wellbeing', filter: ['status','active'] },
+  { table: 'appointments', label: 'Appointments', icon: CalendarDays, path: 'appointments' },
+  { table: 'tasks', label: 'Open tasks', icon: ListTodo, path: 'tasks', filter: ['status','open'] }
 ];
 const staffCards = [
-  { table: 'memberships', label: 'Active members', icon: Users, link: '/app/team', filter: ['status','active'] },
-  { table: 'programme_enrolments', label: 'Enrolments', icon: TrendingUp, link: '/app/programmes' },
-  { table: 'appointments', label: 'Appointments', icon: CalendarDays, link: '/app/appointments' },
-  { table: 'workflow_approvals', label: 'Pending approvals', icon: CheckCircle2, link: '/app/governance', filter: ['status','pending'] }
+  { table: 'memberships', label: 'Active members', icon: Users, path: 'team', filter: ['status','active'] },
+  { table: 'programme_enrolments', label: 'Enrolments', icon: TrendingUp, path: 'programmes' },
+  { table: 'appointments', label: 'Appointments', icon: CalendarDays, path: 'appointments' },
+  { table: 'workflow_approvals', label: 'Pending approvals', icon: CheckCircle2, path: 'governance', filter: ['status','pending'] }
 ];
 
 export default function DashboardPage() {
@@ -42,8 +43,8 @@ export default function DashboardPage() {
 
   return <section className="workspace-page dashboard-page"><header className="workspace-heading"><div><span className="workspace-eyebrow">{auth.organization.name} · {auth.role.replaceAll('_',' ')}</span><h1>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {auth.profile.display_name || auth.profile.full_name}</h1><p>Your secure view of wealth, wellbeing and the work that moves both forward.</p></div></header>
     {state.error && <div className="form-alert error">{state.error}<button onClick={load}><RefreshCcw size={15}/></button></div>}
-    <div className="metric-grid">{state.loading ? Array.from({length:4},(_,i)=><div className="metric-card skeleton" key={i}/>) : state.counts.map(({label,count,icon:Icon,link})=><Link className="metric-card" to={link} key={label}><div className="metric-icon"><Icon/></div><span>{label}</span><strong>{count}</strong><ArrowUpRight className="metric-arrow"/></Link>)}</div>
-    <div className="dashboard-grid"><div className="dashboard-panel"><div className="panel-heading"><div><span>FOCUS</span><h2>Your next best steps</h2></div></div><div className="action-list"><Link to="/app/wellbeing"><HeartPulse/><div><strong>Update wellbeing progress</strong><span>Record a check-in, goal or habit.</span></div><ArrowUpRight/></Link><Link to="/app/wealth"><TrendingUp/><div><strong>Review your wealth plan</strong><span>Keep user-entered targets and balances current.</span></div><ArrowUpRight/></Link><Link to="/app/appointments"><CalendarDays/><div><strong>Coordinate an appointment</strong><span>Request or review an upcoming session.</span></div><ArrowUpRight/></Link></div></div>
-      <aside className="dashboard-panel calm-panel"><span>PRIVATE BY DESIGN</span><h2>Your role defines this view</h2><p>Supabase Row Level Security limits every query to your active IWW organization, role and explicit member scope.</p><Link to="/app/settings">Review privacy preferences <ArrowUpRight size={15}/></Link></aside></div>
+    <div className="metric-grid">{state.loading ? Array.from({length:4},(_,i)=><div className="metric-card skeleton" key={i}/>) : state.counts.map(({label,count,icon:Icon,path})=><Link className="metric-card" to={workspacePath(auth.organization,path)} key={label}><div className="metric-icon"><Icon/></div><span>{label}</span><strong>{count}</strong><ArrowUpRight className="metric-arrow"/></Link>)}</div>
+    <div className="dashboard-grid"><div className="dashboard-panel"><div className="panel-heading"><div><span>FOCUS</span><h2>Your next best steps</h2></div></div><div className="action-list"><Link to={workspacePath(auth.organization,'wellbeing')}><HeartPulse/><div><strong>Update wellbeing progress</strong><span>Record a check-in, goal or habit.</span></div><ArrowUpRight/></Link><Link to={workspacePath(auth.organization,'wealth')}><TrendingUp/><div><strong>Review your wealth plan</strong><span>Keep user-entered targets and balances current.</span></div><ArrowUpRight/></Link><Link to={workspacePath(auth.organization,'appointments')}><CalendarDays/><div><strong>Coordinate an appointment</strong><span>Request or review an upcoming session.</span></div><ArrowUpRight/></Link></div></div>
+      <aside className="dashboard-panel calm-panel"><span>PRIVATE BY DESIGN</span><h2>Your role defines this view</h2><p>Supabase Row Level Security limits every query to your active IWW organization, role and explicit member scope.</p><Link to={workspacePath(auth.organization,'settings')}>Review privacy preferences <ArrowUpRight size={15}/></Link></aside></div>
   </section>;
 }

@@ -17,4 +17,9 @@ describe('protected application routes', () => {
   it('fails closed when the dedicated data service is absent', () => {
     expect(resolveProtectedRoute({...ready,configured:false})).toBe('setup');
   });
+
+  it('keeps organization ownership separate from platform authority', () => {
+    expect(resolveProtectedRoute({...ready,platformStaff:null})).toBe('allow');
+    expect(resolveProtectedRoute({...ready,role:'owner',platformStaff:null},['platform_owner'])).toBe('denied');
+  });
 });
