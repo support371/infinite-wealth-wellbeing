@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 const sql = readFileSync(new URL('../supabase/migrations/20260828040315_iww_production_foundation.sql', import.meta.url),'utf8').toLowerCase();
 const organizationBootstrapSql = readFileSync(new URL('../supabase/migrations/20260828173907_create_organization_with_owner.sql', import.meta.url),'utf8').toLowerCase();
 const authContext = readFileSync(new URL('../src/auth/AuthContext.jsx', import.meta.url),'utf8');
+const platformSql = readFileSync(new URL('../supabase/migrations/20260828181545_platform_plane_and_integration_catalog.sql', import.meta.url),'utf8').toLowerCase();
 
 describe('IWW Supabase production migration', () => {
   it('forces RLS on all public application tables', () => {
@@ -58,5 +59,23 @@ describe('IWW Supabase production migration', () => {
     expect(organizationBootstrapSql).toContain('grant execute on function public.create_organization_with_owner(text, text) to authenticated');
     expect(authContext).toContain(".rpc('create_organization_with_owner'");
     expect(authContext).not.toContain(".from('organizations')\n      .insert");
+  });
+
+  it('separates internal platform staff from client organization roles', () => {
+    expect(platformSql).toContain('create table public.platform_staff');
+    expect(platformSql).toContain("'platform_owner','platform_admin','platform_support','platform_auditor'");
+    expect(platformSql).toContain('private.has_platform_role');
+    expect(platformSql).toContain('create policy organizations_platform_select');
+    expect(platformSql).not.toContain('alter type public.app_role add value');
+  });
+
+  it('provides at least 300 real catalog applications without granting anonymous access', () => {
+    const categorySeeds = platformSql.match(/\('[^']+', array\[/g) || [];
+    const seededNames = platformSql.match(/'[^']+'/g) || [];
+    expect(categorySeeds.length).toBeGreaterThanOrEqual(12);
+    expect(seededNames.length).toBeGreaterThan(300);
+    expect(platformSql).toContain('create policy integration_catalog_select');
+    expect(platformSql).toContain('to authenticated');
+    expect(platformSql).toContain('integration_connections_provider_catalog_fk');
   });
 });

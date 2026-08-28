@@ -10,7 +10,7 @@ export function ProtectedRoute({ children, roles }) {
   if (decision === 'setup') return <Navigate to="/auth/setup-required" replace />;
   if (decision === 'sign-in') return <Navigate to="/auth/sign-in" replace state={{ from: location.pathname }} />;
   if (decision === 'onboarding') return <Navigate to="/onboarding" replace />;
-  if (decision === 'denied') return <Navigate to="/app/access-denied" replace />;
+  if (decision === 'denied') return <Navigate to="/workspaces" replace />;
   return children;
 }
 

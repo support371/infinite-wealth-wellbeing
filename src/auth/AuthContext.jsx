@@ -6,34 +6,36 @@ const ACTIVE_ORG_KEY = 'iww.activeOrganization';
 
 async function fetchIdentity(userId) {
   const client = requireSupabase();
-  const [{ data: profile, error: profileError }, { data: memberships, error: membershipsError }] = await Promise.all([
+  const [{ data: profile, error: profileError }, { data: memberships, error: membershipsError }, { data: platformStaff, error: platformError }] = await Promise.all([
     client.from('profiles').select('*').eq('id', userId).maybeSingle(),
     client
       .from('memberships')
       .select('id, organization_id, role, status, joined_at, organizations(id,name,slug,status,brand_settings)')
       .eq('user_id', userId)
       .eq('status', 'active')
-      .order('created_at')
+      .order('created_at'),
+    client.from('platform_staff').select('id,role,status').eq('user_id', userId).eq('status', 'active').maybeSingle()
   ]);
   if (profileError) throw profileError;
   if (membershipsError) throw membershipsError;
-  return { profile, memberships: memberships || [] };
+  if (platformError && platformError.code !== '42P01') throw platformError;
+  return { profile, memberships: memberships || [], platformStaff: platformStaff || null };
 }
 
 export function AuthProvider({ children }) {
-  const [state, setState] = useState({ loading: true, user: null, profile: null, memberships: [], error: null });
+  const [state, setState] = useState({ loading: true, user: null, profile: null, memberships: [], platformStaff: null, error: null });
   const [activeOrganizationId, setActiveOrganizationId] = useState(() => localStorage.getItem(ACTIVE_ORG_KEY));
 
   const loadUser = useCallback(async () => {
     if (!supabase) {
-      setState({ loading: false, user: null, profile: null, memberships: [], error: null });
+      setState({ loading: false, user: null, profile: null, memberships: [], platformStaff: null, error: null });
       return;
     }
     setState((current) => ({ ...current, loading: true, error: null }));
     try {
       const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
       if (claimsError || !claimsData?.claims?.sub) {
-        setState({ loading: false, user: null, profile: null, memberships: [], error: null });
+        setState({ loading: false, user: null, profile: null, memberships: [], platformStaff: null, error: null });
         return;
       }
       const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -41,7 +43,7 @@ export function AuthProvider({ children }) {
       const identity = await fetchIdentity(userData.user.id);
       setState({ loading: false, user: userData.user, ...identity, error: null });
     } catch (error) {
-      setState({ loading: false, user: null, profile: null, memberships: [], error: error.message });
+      setState({ loading: false, user: null, profile: null, memberships: [], platformStaff: null, error: error.message });
     }
   }, []);
 
@@ -50,7 +52,7 @@ export function AuthProvider({ children }) {
     if (!supabase) return undefined;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
-        setState({ loading: false, user: null, profile: null, memberships: [], error: null });
+        setState({ loading: false, user: null, profile: null, memberships: [], platformStaff: null, error: null });
       } else if (['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
         queueMicrotask(loadUser);
       }

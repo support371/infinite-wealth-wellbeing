@@ -14,7 +14,7 @@ export default function AuthPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  if (auth.user && mode === 'sign-in') return <Navigate to="/app" replace />;
+  if (auth.user && mode === 'sign-in') return <Navigate to="/workspaces" replace />;
 
   const submit = async (event) => {
     event.preventDefault();
@@ -42,7 +42,7 @@ export default function AuthPage() {
       } else {
         const { error: signInError } = await auth.signIn(form.email, form.password);
         if (signInError) throw signInError;
-        navigate(location.state?.from || '/app');
+        navigate(location.state?.from || '/workspaces');
       }
     } catch (submissionError) {
       setError(submissionError.message);

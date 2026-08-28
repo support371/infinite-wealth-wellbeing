@@ -13,7 +13,7 @@ export default function OnboardingPage() {
 
   if (auth.loading) return <div className="app-state app-loading"><span className="spinner"/>Preparing onboarding…</div>;
   if (!auth.user) return <Navigate to="/auth/sign-in" replace/>;
-  if (auth.profile?.onboarding_completed && auth.activeMembership) return <Navigate to="/app" replace/>;
+  if (auth.profile?.onboarding_completed && auth.activeMembership) return <Navigate to="/workspaces" replace/>;
 
   const saveProfile = async (event) => {
     event.preventDefault(); setBusy(true); setError('');
