@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-function serverClient() {
+function serverClient(token) {
   const url = process.env.SUPABASE_URL;
-  const secretKey = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !secretKey) throw new Error('server_supabase_not_configured');
-  return createClient(url, secretKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !publishableKey) throw new Error('server_supabase_not_configured');
+  return createClient(url, publishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } }
+  });
 }
 
 export async function authenticateRequest(req, res, next) {
@@ -12,7 +15,7 @@ export async function authenticateRequest(req, res, next) {
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
   if (!token) return res.status(401).json({ error: 'authentication_required' });
   try {
-    const client = serverClient();
+    const client = serverClient(token);
     const { data: { user }, error: userError } = await client.auth.getUser(token);
     if (userError || !user) return res.status(401).json({ error: 'invalid_or_expired_session' });
     const organizationId = req.headers['x-iww-organization-id'];
