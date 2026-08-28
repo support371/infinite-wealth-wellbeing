@@ -44,7 +44,7 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - [x] Add restrictive membership-based policies: users can access only data belonging to their active IWW organization and allowed role.
 - [x] Maintain append-only audit events; client/member roles must never be able to alter historical audit data.
 - [x] Use a server-side service role only in trusted API functions—not in Vite/browser code.
-- [ ] Run Supabase security advisor after each schema iteration and resolve all critical notices.
+- [x] Run Supabase security advisor after each schema iteration and resolve all critical notices.
 
 ## Phase 4 — IWW SaaS application
 - [x] Build a responsive application shell inspired by GEM operational UX but branded for IWW.
@@ -61,13 +61,13 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - [x] Build Tasks, approvals, operational reporting, and governance/audit views.
 - [x] Build Billing/Subscriptions as secure Stripe-backed references; do not expose Stripe secrets client-side.
 - [x] Build notifications and user-controlled communication preferences.
-- [ ] Add an IWW assistant only for navigation, reflection, resource discovery, summaries, and drafting. It must not make medical diagnoses, crisis determinations, regulated investment decisions, or autonomous financial transactions.
+- [x] Add an IWW assistant only for navigation, reflection, resource discovery, summaries, and drafting. It must not make medical diagnoses, crisis determinations, regulated investment decisions, or autonomous financial transactions.
 
 ## Phase 5 — Integrations and privacy
-- [ ] Make integration connections opt-in and revocable.
+- [x] Make integration connections opt-in and revocable.
 - [ ] Keep HubSpot, Stripe, calendar, email, and future connectors behind server-side endpoints and tenant/role authorization.
-- [ ] Add consent capture, policy acknowledgement, privacy notice links, access/audit views, and retention/deletion workflow placeholders.
-- [ ] Do not claim HIPAA, financial-regulatory, or other compliance certification without an external legal/compliance review.
+- [x] Add consent capture, policy acknowledgement, privacy notice links, access/audit views, and retention/deletion workflow placeholders.
+- [x] Do not claim HIPAA, financial-regulatory, or other compliance certification without an external legal/compliance review.
 
 ## Phase 6 — Design and quality
 - [x] Reuse GEM-level information hierarchy and interaction quality, but create distinct IWW copy, palette, identity, and content.
