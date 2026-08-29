@@ -9,6 +9,8 @@ const AppShell = lazy(() => import('./app/AppShell'));
 const AssistantPage = lazy(() => import('./app/AssistantPage'));
 const DashboardPage = lazy(() => import('./app/DashboardPage'));
 const EntityWorkspace = lazy(() => import('./app/EntityWorkspace'));
+const AppointmentsPage = lazy(() => import('./app/AppointmentsPage'));
+const MemberDirectoryPage = lazy(() => import('./app/MemberDirectoryPage'));
 const MessagesPage = lazy(() => import('./app/MessagesPage'));
 const SettingsPage = lazy(() => import('./app/SettingsPage'));
 const AuthPage = lazy(() => import('./auth/AuthPage'));
@@ -26,7 +28,9 @@ export default function AppRoutes() {
     <Route path="/platform" element={<PlatformProtectedRoute><PlatformPage/></PlatformProtectedRoute>}/>
     <Route path="/w/:organizationSlug" element={<ProtectedRoute><TenantWorkspaceGate><AppShell/></TenantWorkspaceGate></ProtectedRoute>}>
       <Route index element={<DashboardPage/>}/>
-      {['wellbeing','wealth','programmes','appointments','documents','tasks','resources','community','team','governance','reports','billing'].map(key=><Route key={key} path={key} element={<EntityWorkspace moduleKey={key}/>}/>) }
+      {['wellbeing','wealth','programmes','documents','tasks','resources','community','governance','reports','billing'].map(key=><Route key={key} path={key} element={<EntityWorkspace moduleKey={key}/>}/>) }
+      <Route path="appointments" element={<AppointmentsPage/>}/>
+      <Route path="team" element={<MemberDirectoryPage/>}/>
       <Route path="integrations" element={<ConnectedServicesPage/>}/>
       <Route path="messages" element={<MessagesPage/>}/>
       <Route path="assistant" element={<AssistantPage/>}/>

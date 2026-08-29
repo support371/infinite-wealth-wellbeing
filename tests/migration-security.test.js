@@ -6,6 +6,7 @@ const organizationBootstrapSql = readFileSync(new URL('../supabase/migrations/20
 const authContext = readFileSync(new URL('../src/auth/AuthContext.jsx', import.meta.url),'utf8');
 const platformSql = readFileSync(new URL('../supabase/migrations/20260828181545_platform_plane_and_integration_catalog.sql', import.meta.url),'utf8').toLowerCase();
 const managedIntakeSql = readFileSync(new URL('../supabase/migrations/20260828220039_managed_organization_intake.sql', import.meta.url),'utf8').toLowerCase();
+const participantDirectorySql = readFileSync(new URL('../supabase/migrations/20260829135714_workspace_participant_directory.sql', import.meta.url),'utf8').toLowerCase();
 
 describe('IWW Supabase production migration', () => {
   it('forces RLS on all public application tables', () => {
@@ -73,6 +74,26 @@ describe('IWW Supabase production migration', () => {
     expect(managedIntakeSql).toContain('create or replace function public.create_managed_organization_with_owner');
     expect(managedIntakeSql).toContain('security invoker');
     expect(managedIntakeSql).toContain('revoke insert, delete on public.organization_service_intakes from authenticated, anon');
+  });
+
+  it('limits the scheduling directory and invitation acceptance to authenticated identity', () => {
+    expect(participantDirectorySql).toContain('create or replace function private.workspace_participants');
+    expect(participantDirectorySql).toContain('actor_role public.app_role := private.current_org_role(target_org)');
+    expect(participantDirectorySql).toContain('create or replace function public.workspace_participants');
+    expect(participantDirectorySql).toContain('security invoker');
+    expect(participantDirectorySql).toContain("actor_email text := lower(auth.jwt() ->> 'email')");
+    expect(participantDirectorySql).toContain('create or replace function private.accept_my_invitation');
+    expect(participantDirectorySql).toContain('for update');
+    expect(participantDirectorySql).toContain('revoke all on function public.accept_my_invitation(uuid) from public, anon');
+  });
+
+  it('validates appointment participants and role-safe status transitions in the database', () => {
+    expect(participantDirectorySql).toContain('create or replace function private.validate_appointment_participants');
+    expect(participantDirectorySql).toContain("and m.role = 'member'");
+    expect(participantDirectorySql).toContain("and m.role in ('owner','admin','operations_manager','advisor','practitioner')");
+    expect(participantDirectorySql).toContain("new.status in ('confirmed','completed','cancelled','no_show')");
+    expect(participantDirectorySql).toContain("actor_id = old.member_id and new.status = 'cancelled'");
+    expect(participantDirectorySql).toContain('create trigger audit_appointments_change');
   });
 
   it('separates internal platform staff from client organization roles', () => {

@@ -51,11 +51,12 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - [x] Provide accessible desktop sidebar, mobile navigation, header, global search/command entry, notifications, account menu, and workspace context.
 - [x] Implement role-specific dashboards: Owner, Admin/Operations, Advisor/Practitioner, Member, Family Delegate.
 - [x] Implement real loading, empty, validation, error, permission-denied, and offline-retry states for every data screen.
-- [ ] Build Member Directory and member profile views with explicit consent and role-safe private data sections.
+- [x] Build Member Directory and member profile views with explicit consent and role-safe private data sections.
 - [x] Build Programmes/Cohorts, enrolments, milestones, learning/resources, and progress tracking.
 - [x] Build Wellbeing: plans, goals, habits, check-ins, assessments, coaching notes, and session scheduling.
 - [x] Build Wealth: planning goals, assets/liabilities, cash-flow targets, reviews, documents, adviser tasks, and educational resources. Do not present regulated advice, execute trades, or initiate money movement.
 - [ ] Build Calendar/Appointments with availability, booking status, reminders, and optional GCal integration behind explicit user consent.
+- [x] Add organization-validated appointment participants, role-safe status transitions, audit capture, calendar connection visibility, and appointment request management. Availability rules, reminder delivery and external calendar event synchronization remain deferred.
 - [x] Build secure Documents and sharing permissions.
 - [x] Build Messages/Conversations with participant authorization.
 - [x] Build Tasks, approvals, operational reporting, and governance/audit views.
@@ -64,6 +65,7 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - [x] Add an IWW assistant only for navigation, reflection, resource discovery, summaries, and drafting. It must not make medical diagnoses, crisis determinations, regulated investment decisions, or autonomous financial transactions.
 - [x] Present IWW as a managed product workspace reached from GEM Workspace OS while retaining its separate repository, authentication, tenant data, and deployment.
 - [x] Capture existing-project, new-project, or organization-management intake atomically when an owner creates an IWW organization.
+- [x] Add email-bound organization invitations that authenticated recipients can discover and accept during onboarding.
 
 ## Phase 5 — Integrations and privacy
 - [x] Make integration connections opt-in and revocable.
@@ -88,6 +90,7 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - [x] Deploy a preview first, inspect build and runtime logs, then promote/deploy production only after passing checks.
 - [ ] Verify auth, role-routing, RLS-protected queries, dashboard data, mobile UI, error states, and a production smoke test. Public routes and `/api/health` pass; authenticated end-to-end smoke still requires a real IWW user.
 - [x] Apply `20260828220039_managed_organization_intake` and `20260828220219_index_managed_intake_submitter` to the dedicated IWW Supabase project; verify forced RLS, policies, invoker/definer separation, and covered foreign keys.
+- [x] Apply `20260829135714_workspace_participant_directory`; verify authenticated invoker boundaries, internal definer authorization, appointment integrity triggers and audit capture.
 
 ## Acceptance checklist
 - [x] IWW deploys independently from GEM.
