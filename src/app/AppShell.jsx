@@ -17,7 +17,7 @@ const nav = [
   { label:'Tasks', path:'tasks', icon:ClipboardCheck, module:'tasks', section:'Collaboration' },
   { label:'Resources', path:'resources', icon:BookOpen, module:'resources', section:'Community' },
   { label:'Community', path:'community', icon:Users, module:'community', section:'Community' },
-  { label:'Team', path:'team', icon:Users, module:'team', section:'Organization' },
+  { label:'Members & team', path:'team', icon:Users, module:'team', section:'Organization' },
   { label:'Governance', path:'governance', icon:ShieldCheck, module:'governance', section:'Organization' },
   { label:'Reports', path:'reports', icon:ClipboardCheck, module:'reports', section:'Organization' },
   { label:'Billing', path:'billing', icon:CircleDollarSign, module:'billing', section:'Organization' },

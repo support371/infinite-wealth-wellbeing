@@ -72,11 +72,15 @@ export function AuthProvider({ children }) {
     }
   }, [activeMembership, activeOrganizationId]);
 
-  const selectOrganization = (organizationId) => {
+  const selectOrganization = useCallback((organizationId) => {
     if (!state.memberships.some((membership) => membership.organization_id === organizationId)) return;
     localStorage.setItem(ACTIVE_ORG_KEY, organizationId);
     setActiveOrganizationId(organizationId);
-  };
+  }, [state.memberships]);
+  const rememberOrganization = useCallback((organizationId) => {
+    localStorage.setItem(ACTIVE_ORG_KEY, organizationId);
+    setActiveOrganizationId(organizationId);
+  }, []);
 
   const signIn = async (email, password) => requireSupabase().auth.signInWithPassword({ email, password });
   const signUp = async (email, password, fullName) => requireSupabase().auth.signUp({
@@ -118,9 +122,25 @@ export function AuthProvider({ children }) {
       .single();
     if (error) throw error;
     await loadUser();
-    selectOrganization(organization.id);
+    rememberOrganization(organization.id);
     return organization;
   };
+
+  const getPendingInvitations = useCallback(async () => {
+    const { data, error } = await requireSupabase().rpc('pending_my_invitations');
+    if (error) throw error;
+    return data || [];
+  }, []);
+
+  const acceptInvitation = useCallback(async (invitationId) => {
+    const { data: organization, error } = await requireSupabase()
+      .rpc('accept_my_invitation', { p_invitation_id: invitationId })
+      .single();
+    if (error) throw error;
+    await loadUser();
+    rememberOrganization(organization.id);
+    return organization;
+  }, [loadUser, rememberOrganization]);
 
   const value = {
     ...state,
@@ -136,6 +156,8 @@ export function AuthProvider({ children }) {
     signOut,
     completeProfile,
     createOrganization,
+    getPendingInvitations,
+    acceptInvitation,
     refreshIdentity: loadUser
   };
 

@@ -25,4 +25,11 @@ describe('GEM-managed IWW product boundary', () => {
     expect(onboarding).toContain('managementMode');
     expect(onboarding).toContain('Register your managed organization');
   });
+
+  it('uses dedicated operational pages for people and appointments', () => {
+    expect(routes).toContain("import('./app/MemberDirectoryPage')");
+    expect(routes).toContain("import('./app/AppointmentsPage')");
+    expect(routes).toContain('<Route path="appointments" element={<AppointmentsPage/>}/>');
+    expect(routes).toContain('<Route path="team" element={<MemberDirectoryPage/>}/>');
+  });
 });
