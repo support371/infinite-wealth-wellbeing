@@ -55,8 +55,8 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - [x] Build Programmes/Cohorts, enrolments, milestones, learning/resources, and progress tracking.
 - [x] Build Wellbeing: plans, goals, habits, check-ins, assessments, coaching notes, and session scheduling.
 - [x] Build Wealth: planning goals, assets/liabilities, cash-flow targets, reviews, documents, adviser tasks, and educational resources. Do not present regulated advice, execute trades, or initiate money movement.
-- [ ] Build Calendar/Appointments with availability, booking status, reminders, and optional GCal integration behind explicit user consent.
-- [x] Add organization-validated appointment participants, role-safe status transitions, audit capture, calendar connection visibility, and appointment request management. Availability rules, reminder delivery and external calendar event synchronization remain deferred.
+- [x] Build Calendar/Appointments with availability, booking status, durable reminder queueing, and optional calendar connection visibility behind explicit organization consent.
+- [x] Add organization-validated appointment participants, role-safe status transitions, audit capture, calendar connection visibility, weekly professional availability, overlap prevention, and appointment request management. External delivery workers and calendar event synchronization remain credential-dependent.
 - [x] Build secure Documents and sharing permissions.
 - [x] Build Messages/Conversations with participant authorization.
 - [x] Build Tasks, approvals, operational reporting, and governance/audit views.
@@ -70,14 +70,14 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 ## Phase 5 — Integrations and privacy
 - [x] Make integration connections opt-in and revocable.
 - [x] Keep the 300+ application directory in the central GEM Workspace OS and show only organization-authorized connected services inside IWW.
-- [ ] Keep HubSpot, Stripe, calendar, email, and future connectors behind server-side endpoints and tenant/role authorization.
+- [x] Keep HubSpot, Stripe, calendar, email, and future connector mutations behind authenticated server-side endpoints with tenant and owner/admin authorization.
 - [x] Add consent capture, policy acknowledgement, privacy notice links, access/audit views, and retention/deletion workflow placeholders.
 - [x] Do not claim HIPAA, financial-regulatory, or other compliance certification without an external legal/compliance review.
 
 ## Phase 6 — Design and quality
 - [x] Reuse GEM-level information hierarchy and interaction quality, but create distinct IWW copy, palette, identity, and content.
 - [x] Keep UI accessible: semantic landmarks, keyboard support, visible focus, labels, useful errors, WCAG AA contrast, responsive 375px+ layouts.
-- [ ] Provide light and dark modes if the existing IWW design system supports them; avoid regressions.
+- [x] Provide persisted light, dark, and system modes through the existing IWW design system.
 - [x] Add unit/integration tests for RBAC, protected routes, tenant isolation, sensitive-record access, major workflows, and API validation.
 - [x] Run lint, tests, type/build checks, and production build before every deploy.
 - [x] Scan any proposed commit for secrets before push.
