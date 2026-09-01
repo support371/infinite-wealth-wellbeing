@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowUpRight, CalendarDays, CheckCircle2, HeartPulse, ListTodo, RefreshCcw, ShieldCheck, TrendingUp, Users } from 'lucide-react';
+import { ArrowUpRight, BadgeCheck, CalendarDays, CheckCircle2, HeartPulse, ListTodo, RefreshCcw, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { requireSupabase } from '../lib/supabase';
@@ -22,7 +22,7 @@ const gemWorkspaceUrl = import.meta.env.VITE_GEM_WORKSPACE_URL || 'https://suppo
 
 export default function DashboardPage() {
   const auth = useAuth();
-  const [state, setState] = useState({ loading: true, error: '', counts: [], intake: null, connectionCount: 0 });
+  const [state, setState] = useState({ loading: true, error: '', counts: [], intake: null, connectionCount: 0, kyc: null });
   const cards = staffRoles.includes(auth.role) ? staffCards : memberCards;
   const showOwnerReadiness = staffRoles.includes(auth.role);
 
@@ -30,7 +30,7 @@ export default function DashboardPage() {
     setState((current) => ({ ...current, loading: true, error: '' }));
     try {
       const client = requireSupabase();
-      const [counts, intakeResult, connectionResult] = await Promise.all([
+      const [counts, intakeResult, connectionResult, kycResult] = await Promise.all([
         Promise.all(cards.map(async (card) => {
           let query = client.from(card.table).select('id', { count: 'exact', head: true }).eq('organization_id', auth.organization.id);
           if (card.filter) query = query.eq(card.filter[0], card.filter[1]);
@@ -43,17 +43,22 @@ export default function DashboardPage() {
           : Promise.resolve({ data: null, error: null }),
         showOwnerReadiness
           ? client.from('integration_connections').select('id', { count: 'exact', head: true }).eq('organization_id', auth.organization.id).eq('status', 'connected')
-          : Promise.resolve({ count: 0, error: null })
+          : Promise.resolve({ count: 0, error: null }),
+        staffRoles.includes(auth.role)
+          ? client.from('kyc_cases').select('id', { count: 'exact', head: true }).eq('organization_id', auth.organization.id).in('status', ['submitted','under_review'])
+          : client.from('kyc_cases').select('status,reviewer_message').eq('organization_id', auth.organization.id).eq('subject_user_id', auth.user.id).maybeSingle()
       ]);
       if (intakeResult.error) throw intakeResult.error;
       if (connectionResult.error) throw connectionResult.error;
-      setState({ loading: false, error: '', counts, intake: intakeResult.data, connectionCount: connectionResult.count || 0 });
+      if (kycResult.error) throw kycResult.error;
+      setState({ loading: false, error: '', counts, intake: intakeResult.data, connectionCount: connectionResult.count || 0, kyc: staffRoles.includes(auth.role) ? { status: 'queue', count: kycResult.count || 0 } : kycResult.data });
     } catch (error) { setState((current) => ({ ...current, loading: false, error: error.message, counts: [] })); }
-  }, [auth.organization.id, cards, showOwnerReadiness]);
+  }, [auth.organization.id, auth.role, auth.user.id, cards, showOwnerReadiness]);
 
   useEffect(() => { load(); }, [load]);
 
   return <section className="workspace-page dashboard-page"><header className="workspace-heading"><div><span className="workspace-eyebrow">{auth.organization.name} · {auth.role.replaceAll('_',' ')}</span><h1>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {auth.profile.display_name || auth.profile.full_name}</h1><p>Your secure view of wealth, wellbeing and the work that moves both forward.</p></div></header>
+    {!state.loading && <Link className={`dashboard-kyc-banner kyc-${state.kyc?.status || 'not_started'}`} to={workspacePath(auth.organization,'verification')}><BadgeCheck/><div><strong>{staffRoles.includes(auth.role) ? `${state.kyc?.count || 0} KYC cases need attention` : `KYC: ${(state.kyc?.status || 'not started').replaceAll('_',' ')}`}</strong><span>{staffRoles.includes(auth.role) ? 'Open the authorized review and approval queue.' : state.kyc?.status === 'approved' ? 'Identity verification is approved.' : 'Complete or review identity verification before sensitive services are activated.'}</span></div><ArrowUpRight/></Link>}
     {state.error && <div className="form-alert error">{state.error}<button onClick={load}><RefreshCcw size={15}/></button></div>}
     <div className="metric-grid">{state.loading ? Array.from({length:4},(_,i)=><div className="metric-card skeleton" key={i}/>) : state.counts.map(({label,count,icon:Icon,path})=><Link className="metric-card" to={workspacePath(auth.organization,path)} key={label}><div className="metric-icon"><Icon/></div><span>{label}</span><strong>{count}</strong><ArrowUpRight className="metric-arrow"/></Link>)}</div>
     <div className="dashboard-grid"><div className="dashboard-panel"><div className="panel-heading"><div><span>FOCUS</span><h2>Your next best steps</h2></div></div><div className="action-list"><Link to={workspacePath(auth.organization,'wellbeing')}><HeartPulse/><div><strong>Update wellbeing progress</strong><span>Record a check-in, goal or habit.</span></div><ArrowUpRight/></Link><Link to={workspacePath(auth.organization,'wealth')}><TrendingUp/><div><strong>Review your wealth plan</strong><span>Keep user-entered targets and balances current.</span></div><ArrowUpRight/></Link><Link to={workspacePath(auth.organization,'appointments')}><CalendarDays/><div><strong>Coordinate an appointment</strong><span>Request or review an upcoming session.</span></div><ArrowUpRight/></Link></div></div>

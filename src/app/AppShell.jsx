@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, BookOpen, Building2, CalendarDays, ChevronDown, CircleDollarSign, ClipboardCheck, ExternalLink, FileText, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Plug, Search, Settings, ShieldCheck, Sparkles, TrendingUp, Users, X } from 'lucide-react';
+import { BadgeCheck, Bell, BookOpen, Building2, CalendarDays, ChevronDown, CircleDollarSign, ClipboardCheck, ExternalLink, FileText, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Plug, Search, Settings, ShieldCheck, Sparkles, TrendingUp, Users, X } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { requireSupabase } from '../lib/supabase';
@@ -19,6 +19,7 @@ const nav = [
   { label:'Resources', path:'resources', icon:BookOpen, module:'resources', section:'Community' },
   { label:'Community', path:'community', icon:Users, module:'community', section:'Community' },
   { label:'Members & team', path:'team', icon:Users, module:'team', section:'Organization' },
+  { label:'KYC verification', path:'verification', icon:BadgeCheck, section:'Organization' },
   { label:'Governance', path:'governance', icon:ShieldCheck, module:'governance', section:'Organization' },
   { label:'Reports', path:'reports', icon:ClipboardCheck, module:'reports', section:'Organization' },
   { label:'Billing', path:'billing', icon:CircleDollarSign, module:'billing', section:'Organization' },
