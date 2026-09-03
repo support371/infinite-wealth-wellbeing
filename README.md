@@ -7,7 +7,8 @@ Standalone, tenant-isolated SaaS for integrated wealth planning, wellbeing suppo
 - Public IWW website plus a protected `/app` workspace
 - Dedicated Supabase Auth, profiles, organizations and seven IWW roles
 - Versioned Supabase schema with RLS, member/care-team/delegate scope and append-only audit history
-- Functional wealth, wellbeing, programme, appointment, task, messaging, document, resource, community, reporting, billing and governance modules
+- Functional wealth, wellbeing, Crypto Services, programme, appointment, task, messaging, document, resource, community, reporting, billing and governance modules
+- KYC-gated Crypto Services intake, owner/operations review and separately authenticated Crypto Signal Service launch
 - Server-authoritative Express/Vercel API boundary
 - Responsive desktop/mobile shell, command search and deliberate empty/error/denied states
 
@@ -25,4 +26,4 @@ npm run security:secrets
 
 Copy `.env.example` to `.env.local` and configure only the dedicated IWW project. Browser code accepts `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`; privileged server operations use `SUPABASE_SECRET_KEY` without the `VITE_` prefix.
 
-The authoritative migration is `supabase/migrations/20260828040315_iww_production_foundation.sql`. Apply it only to Supabase project `fepfnzrpftxpxlgyujev`.
+Apply the versioned migrations in `supabase/migrations/` in filename order and only to Supabase project `fepfnzrpftxpxlgyujev`.

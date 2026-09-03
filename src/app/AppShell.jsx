@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BadgeCheck, Bell, BookOpen, Building2, CalendarDays, ChevronDown, CircleDollarSign, ClipboardCheck, ExternalLink, FileText, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Plug, Search, Settings, ShieldCheck, Sparkles, TrendingUp, Users, X } from 'lucide-react';
+import { BadgeCheck, Bell, Bitcoin, BookOpen, Building2, CalendarDays, ChevronDown, CircleDollarSign, ClipboardCheck, ExternalLink, FileText, HeartPulse, LayoutDashboard, LogOut, Menu, MessageSquare, Plug, Search, Settings, ShieldCheck, Sparkles, TrendingUp, Users, X } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { requireSupabase } from '../lib/supabase';
@@ -11,6 +11,7 @@ const nav = [
   { label:'Overview', path:'', icon:LayoutDashboard, end:true, section:'Workspace' },
   { label:'Wellbeing', path:'wellbeing', icon:HeartPulse, module:'wellbeing', section:'Plans' },
   { label:'Wealth planning', path:'wealth', icon:TrendingUp, module:'wealth', section:'Plans' },
+  { label:'Crypto Services', path:'crypto', icon:Bitcoin, section:'Plans' },
   { label:'Programmes', path:'programmes', icon:BookOpen, module:'programmes', section:'Plans' },
   { label:'Appointments', path:'appointments', icon:CalendarDays, module:'appointments', section:'Collaboration' },
   { label:'Messages', path:'messages', icon:MessageSquare, section:'Collaboration' },
