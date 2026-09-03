@@ -19,6 +19,7 @@ const WorkspaceSelectorPage = lazy(() => import('./app/WorkspaceSelectorPage'));
 const ConnectedServicesPage = lazy(() => import('./app/ConnectedServicesPage'));
 const PlatformPage = lazy(() => import('./app/PlatformPage'));
 const KycPage = lazy(() => import('./app/KycPage'));
+const CryptoServicesPage = lazy(() => import('./app/CryptoServicesPage'));
 
 export default function AppRoutes() {
   return <Suspense fallback={<div className="app-state app-loading" role="status"><span className="spinner"/>Loading IWW…</div>}><Routes>
@@ -37,6 +38,7 @@ export default function AppRoutes() {
       <Route path="assistant" element={<AssistantPage/>}/>
       <Route path="settings" element={<SettingsPage/>}/>
       <Route path="verification" element={<KycPage/>}/>
+      <Route path="crypto" element={<CryptoServicesPage/>}/>
       <Route path="access-denied" element={<div className="app-state denied"><ShieldLock/><h1>Access denied</h1><p>Your assigned IWW role does not authorize this area.</p></div>}/>
       <Route path="*" element={<Navigate to="." replace/>}/>
     </Route>

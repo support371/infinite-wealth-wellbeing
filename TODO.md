@@ -66,6 +66,7 @@ Build **Infinite World of Well-Being (IWW)** as a complete, standalone SaaS plat
 - [x] Present IWW as a managed product workspace reached from GEM Workspace OS while retaining its separate repository, authentication, tenant data, and deployment.
 - [x] Capture existing-project, new-project, or organization-management intake atomically when an owner creates an IWW organization.
 - [x] Add email-bound organization invitations that authenticated recipients can discover and accept during onboarding.
+- [x] Add tenant-scoped Crypto Services with service discovery, request intake, KYC-gated approval, owner/operations management, audit capture, and a separate managed service launch.
 
 ## Phase 5 — Integrations and privacy
 - [x] Make integration connections opt-in and revocable.
