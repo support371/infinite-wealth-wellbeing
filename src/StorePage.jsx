@@ -1,74 +1,79 @@
-import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@base44/sdk';
-import { ArrowRight, Building2, CheckCircle, LockKeyhole, RefreshCcw, ShieldCheck } from 'lucide-react';
+import {
+  ArrowUpRight,
+  BookOpen,
+  CheckCircle,
+  HeartHandshake,
+  Landmark,
+  Leaf,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const STORE_APP_ID = '6a4b77b56397f06ba1da0abc';
-const store = createClient({ appId: STORE_APP_ID });
+export const STORE_URL = 'https://muscular-aether-axis-core.base44.app/';
 
-const CATEGORY_LABELS = {
-  cybersecurity: 'Cybersecurity',
-  real_estate: 'Property & real estate',
-  consulting: 'Advisory & consulting',
-  other: 'Specialist services',
-};
-
-const FALLBACK_PRODUCTS = [
-  { id: 'fallback-1', name: 'GEM Phishing Test & Awareness Report', description: 'A team phishing simulation with a practical findings and training report.', category: 'cybersecurity', price: 15 },
-  { id: 'fallback-2', name: 'Alliance Trust — Lease Agreement Review', description: 'Pre-signing review and risk screening for residential or commercial lease agreements.', category: 'real_estate', price: 45 },
-  { id: 'fallback-3', name: 'Investment Property Consultation', description: 'A focused consultation covering property strategy, risk and portfolio priorities.', category: 'consulting', price: 149 },
-  { id: 'fallback-4', name: 'GEM Identity Theft Recovery Kit', description: 'A structured recovery toolkit with dispute, monitoring and response guidance.', category: 'cybersecurity', price: 65 },
+const STORE_CATEGORIES = [
+  {
+    name: 'Wealth Services',
+    count: 47,
+    icon: Landmark,
+    description: 'Wealth empowerment, investment strategy, asset protection and financial education.',
+  },
+  {
+    name: 'Well-being',
+    count: 35,
+    icon: Leaf,
+    description: 'Spiritual healing, herbal medicine, energy wellness, sound therapy and holistic coaching.',
+  },
+  {
+    name: 'Ministry',
+    count: 4,
+    icon: HeartHandshake,
+    description: 'Ministry formation, credentials, officiant services and faith-centered counseling.',
+  },
+  {
+    name: 'Membership',
+    count: 2,
+    icon: ShieldCheck,
+    description: 'Ongoing access designed for people building a more supported and resilient life.',
+  },
+  {
+    name: 'Programs',
+    count: 8,
+    icon: Sparkles,
+    description: 'Guided experiences that bring wealth, well-being and community into one plan.',
+  },
+  {
+    name: 'Resources',
+    count: 4,
+    icon: BookOpen,
+    description: 'Practical learning materials and tools for progress between sessions.',
+  },
 ];
 
 export default function StorePage() {
-  const [state, setState] = useState({ loading: true, products: [], live: false, error: '' });
-  const [category, setCategory] = useState('all');
-
-  async function loadCatalog() {
-    setState((current) => ({ ...current, loading: true, error: '' }));
-    try {
-      const products = await store.entities.Product.filter({ in_stock: true }, 'sort_order', 24, 0);
-      setState({ loading: false, products, live: true, error: '' });
-    } catch {
-      setState({
-        loading: false,
-        products: FALLBACK_PRODUCTS,
-        live: false,
-        error: 'The live Base44 inventory is temporarily unavailable, so this page is showing the verified catalog preview.',
-      });
-    }
-  }
-
-  useEffect(() => { loadCatalog(); }, []);
-
-  const categories = useMemo(
-    () => ['all', ...new Set(state.products.map((product) => product.category).filter(Boolean))],
-    [state.products],
-  );
-  const visible = category === 'all'
-    ? state.products
-    : state.products.filter((product) => product.category === category);
-
   return (
     <div className="store-page">
       <section className="store-hero">
         <div className="container store-hero-inner">
           <div>
-            <span className="label label-light">Leonard Store · Base44 connected</span>
-            <h1>Practical services for a more secure, resilient future.</h1>
-            <p>Explore the managed GEM and Alliance Trust service catalog from inside Infinite Wealth &amp; Well-being. Every request is reviewed before delivery or payment.</p>
+            <span className="label label-light">Aether &amp; Axis · Official Base44 store</span>
+            <h1>One trusted destination for wealth and whole-person well-being.</h1>
+            <p>Explore Leonard M. Diana’s complete Infinite Wealth &amp; Well-being catalog—100 verified listings spanning financial empowerment, healing, ministry, programs and practical resources.</p>
             <div className="store-hero-actions">
-              <a href="#catalog" className="btn btn-gold btn-lg">Explore catalog <ArrowRight size={17}/></a>
-              <Link to="/contact" className="btn btn-ghost btn-lg">Talk with the team</Link>
+              <a href={STORE_URL} target="_blank" rel="noreferrer" className="btn btn-gold btn-lg">
+                Open the official store <ArrowUpRight size={17}/>
+              </a>
+              <Link to="/contact" className="btn btn-ghost btn-lg">Get personal guidance</Link>
             </div>
           </div>
           <aside className="store-trust-card">
             <ShieldCheck/>
-            <strong>Governed service access</strong>
-            <p>No automatic charge, investment action or security operation begins from this page. Scope and delivery are confirmed first.</p>
-            <span><CheckCircle/> Catalog source identified</span>
-            <span><CheckCircle/> Human review before fulfillment</span>
-            <span><CheckCircle/> Secure member workspace available</span>
+            <strong>A verified connection</strong>
+            <p>This gateway now points directly to the Aether &amp; Axis storefront you identified, so visitors reach the complete and current catalog.</p>
+            <span><CheckCircle/> 100 listings available</span>
+            <span><CheckCircle/> Secure checkout on Base44</span>
+            <span><CheckCircle/> Wealth, wellness and ministry in one place</span>
           </aside>
         </div>
       </section>
@@ -77,47 +82,44 @@ export default function StorePage() {
         <div className="container">
           <div className="store-catalog-head">
             <div>
-              <span className="label">Managed catalog</span>
-              <h2>Choose the outcome you need.</h2>
-              <p>Live inventory is read from the connected Base44 Leonard Store when public catalog access is available.</p>
+              <span className="label">Explore the catalog</span>
+              <h2>Choose the support that moves you forward.</h2>
+              <p>Browse by outcome here, then continue to the official Aether &amp; Axis store for full details, availability and checkout.</p>
             </div>
-            <div className="store-status" data-live={state.live}>
-              <span/>{state.live ? 'Live Base44 catalog' : 'Verified catalog preview'}
-            </div>
+            <div className="store-status" data-live="true"><span/>Verified Base44 destination</div>
           </div>
 
-          {state.error && <div className="store-notice"><LockKeyhole/>{state.error}<button onClick={loadCatalog}><RefreshCcw/> Retry</button></div>}
-
-          <div className="store-filters" aria-label="Filter catalog">
-            {categories.map((item) => (
-              <button key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>
-                {item === 'all' ? 'All services' : CATEGORY_LABELS[item] || item.replaceAll('_', ' ')}
-              </button>
+          <div className="store-grid">
+            {STORE_CATEGORIES.map(({ name, count, icon: Icon, description }) => (
+              <article className="store-card store-category-card" key={name}>
+                <div className="store-card-media">
+                  <div className="store-card-mark"><Icon/><span>{count} listings</span></div>
+                  <span>{name}</span>
+                </div>
+                <div className="store-card-body">
+                  <h2>{name}</h2>
+                  <p>{description}</p>
+                  <div className="store-card-foot">
+                    <span>{count} options</span>
+                    <a href={STORE_URL} target="_blank" rel="noreferrer">
+                      Browse in store <ArrowUpRight size={14}/>
+                    </a>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
 
-          {state.loading ? <div className="store-loading" role="status"><span className="spinner"/>Connecting to Leonard Store…</div> : (
-            <div className="store-grid">
-              {visible.map((product) => (
-                <article className="store-card" key={product.id}>
-                  <div className="store-card-media">
-                    {product.image_url
-                      ? <img src={product.image_url} alt="" loading="lazy"/>
-                      : <div className="store-card-mark"><Building2/><span>{CATEGORY_LABELS[product.category] || 'IWW'}</span></div>}
-                    <span>{CATEGORY_LABELS[product.category] || 'Specialist service'}</span>
-                  </div>
-                  <div className="store-card-body">
-                    <h2>{product.name}</h2>
-                    <p>{product.description}</p>
-                    <div className="store-card-foot">
-                      <span>{Number.isFinite(Number(product.price)) ? `From $${Number(product.price).toFixed(2)}` : 'Scope-based pricing'}</span>
-                      <Link to="/contact">Request service <ArrowRight size={14}/></Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
+          <div className="store-final-cta">
+            <div>
+              <span className="label">All services</span>
+              <h2>Ready to see the full collection?</h2>
+              <p>Search, filter, compare and purchase from the complete official storefront.</p>
             </div>
-          )}
+            <a href={STORE_URL} target="_blank" rel="noreferrer" className="btn btn-primary btn-lg">
+              Visit Aether &amp; Axis <ArrowUpRight size={17}/>
+            </a>
+          </div>
         </div>
       </section>
     </div>

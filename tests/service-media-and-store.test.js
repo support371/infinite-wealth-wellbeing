@@ -35,10 +35,11 @@ describe('public service media and Leonard Store connection', () => {
     expect(publicStyles).toContain('prefers-reduced-motion: reduce');
   });
 
-  it('connects the public store gateway to the identified Base44 catalog', () => {
-    expect(storePage).toContain("createClient({ appId: STORE_APP_ID })");
-    expect(storePage).toContain("store.entities.Product.filter({ in_stock: true }");
-    expect(storePage).toContain("6a4b77b56397f06ba1da0abc");
+  it('connects the public store gateway to the verified Aether & Axis destination', () => {
+    expect(storePage).toContain("https://muscular-aether-axis-core.base44.app/");
+    expect(storePage).toContain('Aether &amp; Axis');
+    expect(storePage).toContain('100 verified listings');
+    expect(storePage).not.toContain('6a4b77b56397f06ba1da0abc');
     expect(publicSite).toContain('<Route path="/store"');
   });
 });
