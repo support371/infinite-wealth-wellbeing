@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import {
   Heart, Shield, Star, Users, BookOpen, Award, TrendingUp, Globe,
@@ -8,6 +8,7 @@ import {
   Home as HomeIcon, AlertCircle, Zap, Target, PieChart, UserCheck
 } from 'lucide-react';
 import './styles.css';
+import StorePage from './StorePage';
 
 const LEONARD = "https://base44.app/api/apps/69d42975b7b1794c3dc01661/files/mp/public/69d42975b7b1794c3dc01661/74db28267_file_30.jpg";
 
@@ -40,6 +41,21 @@ const I = {
   t1: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&q=80',
   t2: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=500&q=80',
   t3: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=500&q=80',
+};
+
+const FILM = {
+  wealthEmpowerment: '/media/services/wealth-empowerment.mp4',
+  investmentStrategy: '/media/services/investment-strategy.mp4',
+  assetProtection: '/media/services/asset-protection.mp4',
+  financialEducation: '/media/services/financial-education.mp4',
+  businessWealth: '/media/services/business-wealth.mp4',
+  communityProsperity: '/media/services/community-prosperity.mp4',
+  spiritualHealing: '/media/services/spiritual-healing.mp4',
+  energyWellness: '/media/services/energy-wellness.mp4',
+  herbalMedicine: '/media/services/herbal-medicine.mp4',
+  soundTherapy: '/media/services/sound-therapy.mp4',
+  emotionalWellness: '/media/services/emotional-wellness.mp4',
+  holisticCoaching: '/media/services/holistic-coaching.mp4',
 };
 
 /* ═══════════════════════════════════════════════
@@ -125,6 +141,7 @@ const NAV = [
       { icon: <Globe size={15}/>,     label: 'All Resources',       desc: 'Complete resource library',        href: '/resources' },
     ],
   },
+  { label: 'Store', href: '/store' },
   { label: 'Contact', href: '/contact' },
 ];
 
@@ -284,7 +301,9 @@ function Footer() {
             </div>
             <p className="footer-about">One unified platform — financial empowerment, holistic healing, and spiritual well-being — led by Leonard M. Diana, Ambassador of Hartford, CT.</p>
             <div className="footer-socials">
-              {['X','f','▶','📷'].map(s => <a key={s} href="#" className="footer-social-btn">{s}</a>)}
+              <Link to="/store" className="footer-social-btn" aria-label="Leonard Store">LS</Link>
+              <Link to="/workspaces" className="footer-social-btn" aria-label="Member workspace">IW</Link>
+              <Link to="/contact" className="footer-social-btn" aria-label="Contact the team">@</Link>
             </div>
           </div>
           <div className="footer-col">
@@ -302,14 +321,16 @@ function Footer() {
           <div className="footer-col">
             <h5>Platform</h5>
             <ul>
-              {[['About Us','/about'],['Membership','/membership'],['Programs','/programs'],['Resources','/resources'],['Trust Center','/trust-center'],['Donate','/donate'],['Contact','/contact']].map(([l,h])=><li key={l}><Link to={h}>{l}</Link></li>)}
+              {[['About Us','/about'],['Leonard Store','/store'],['Membership','/membership'],['Programs','/programs'],['Resources','/resources'],['Trust Center','/trust-center'],['Donate','/donate'],['Contact','/contact']].map(([l,h])=><li key={l}><Link to={h}>{l}</Link></li>)}
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Infinite Wealth &amp; Well-being. All rights reserved.</span>
           <div style={{display:'flex',gap:18}}>
-            {['Privacy Policy','Terms of Use','Member Agreement'].map(l=><a href="#" key={l}>{l}</a>)}
+            <Link to="/trust-center/privacy">Privacy Policy</Link>
+            <Link to="/trust-center/terms">Terms of Use</Link>
+            <Link to="/trust-center/member-agreement">Member Agreement</Link>
           </div>
           <div className="footer-cert-row"><Shield size={12}/><span>508(c)(1)(a) Ministry · Private Holistic Association · Hartford, CT</span></div>
         </div>
@@ -320,6 +341,40 @@ function Footer() {
 
 function Layout({ children }) {
   return <><Navbar/><main>{children}</main><Footer/></>;
+}
+
+function ServiceFilm({ film, poster, label, variant = 'card', controls = false }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) video.play().catch(() => undefined);
+      else video.pause();
+    }, { threshold: 0.24 });
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className={`service-film service-film-${variant}`}>
+      <video
+        ref={videoRef}
+        src={film}
+        poster={poster}
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        controls={controls}
+        aria-label={`${label} visual service preview`}
+      />
+      <span className="service-film-badge"><span aria-hidden="true">▶</span> Service film</span>
+    </div>
+  );
 }
 
 /* ─── REUSABLE PAGE HERO ─── */
@@ -365,7 +420,7 @@ function PageHero({ img, label, title, titleEm, sub, am = false, breadcrumb = []
 }
 
 /* ─── REUSABLE SERVICE DETAIL PAGE ─── */
-function ServicePage({ img, label, breadcrumb, title, titleEm, sub, am, intro, features, relatedLinks, cta }) {
+function ServicePage({ img, film, label, breadcrumb, title, titleEm, sub, am, intro, features, relatedLinks, cta }) {
   return (
     <Layout>
       <PageHero img={img} label={label} title={title} titleEm={titleEm} sub={sub} am={am} breadcrumb={breadcrumb}/>
@@ -391,8 +446,9 @@ function ServicePage({ img, label, breadcrumb, title, titleEm, sub, am, intro, f
                 <Link to="/contact" className="btn btn-outline-gold btn-lg">Ask a Question</Link>
               </div>
             </div>
-            <div>
-              <img src={img} alt={title} style={{ width:'100%', borderRadius:24, aspectRatio:'4/5', objectFit:'cover', boxShadow:'var(--shadow-lg)' }}/>
+            <div className="service-detail-media">
+              <ServiceFilm film={film} poster={img} label={`${title} ${titleEm || ''}`} variant="detail" controls/>
+              <p className="service-film-note">A visual introduction to this service. Use the controls to pause, replay, or view full screen.</p>
             </div>
           </div>
         </div>
@@ -538,21 +594,23 @@ function Home() {
           </div>
           <div className="bento-grid">
             <Link to="/wealth/empowerment" className="bento-card col-span-7">
-              <img src={I.wealth} alt="" className="bento-card-img short"/>
+              <ServiceFilm film={FILM.wealthEmpowerment} poster={I.wealth} label="Wealth Empowerment" variant="bento-short"/>
               <div className="bento-card-body"><div className="bento-card-icon"><TrendingUp/></div><h3>Wealth Empowerment</h3><p>Financial literacy, debt elimination, and generational wealth planning for every income level.</p><div className="bento-arrow">Explore <ChevronRight size={14}/></div></div>
             </Link>
             <Link to="/wealth/investment" className="bento-card col-span-5">
-              <img src={I.invest} alt="" className="bento-card-img short"/>
+              <ServiceFilm film={FILM.investmentStrategy} poster={I.invest} label="Investment Strategy" variant="bento-short"/>
               <div className="bento-card-body"><div className="bento-card-icon"><BarChart2/></div><h3>Investment Strategy</h3><p>Portfolio construction and long-term investment planning tailored to your goals.</p><div className="bento-arrow">Explore <ChevronRight size={14}/></div></div>
             </Link>
             <Link to="/wealth/protection" className="bento-card col-span-4 dark">
+              <ServiceFilm film={FILM.assetProtection} poster={I.protect} label="Asset Protection" variant="bento"/>
               <div className="bento-card-body"><div className="bento-card-icon"><Shield/></div><h3>Asset Protection</h3><p>Legal structures and risk management to defend what you build.</p><div className="bento-arrow">Explore <ChevronRight size={14}/></div></div>
             </Link>
             <Link to="/wealth/education" className="bento-card col-span-4">
-              <img src={I.educate} alt="" className="bento-card-img"/>
+              <ServiceFilm film={FILM.financialEducation} poster={I.educate} label="Financial Education" variant="bento"/>
               <div className="bento-card-body"><div className="bento-card-icon"><BookOpen/></div><h3>Financial Education</h3><p>Workshops, seminars, and a growing library of wealth-building resources.</p><div className="bento-arrow">Explore <ChevronRight size={14}/></div></div>
             </Link>
             <Link to="/wealth/community" className="bento-card col-span-4 gold-card">
+              <ServiceFilm film={FILM.communityProsperity} poster={I.community} label="Community Prosperity" variant="bento"/>
               <div className="bento-card-body"><div className="bento-card-icon"><Users/></div><h3>Community Prosperity</h3><p>Group wealth-building cohorts and peer networks that accelerate everyone's progress.</p><div className="bento-arrow">Explore <ChevronRight size={14}/></div></div>
             </Link>
           </div>
@@ -572,22 +630,23 @@ function Home() {
           </div>
           <div className="bento-grid">
             <Link to="/wellbeing/spiritual" className="bento-card col-span-7">
-              <img src={I.prayer} alt="" className="bento-card-img short"/>
+              <ServiceFilm film={FILM.spiritualHealing} poster={I.prayer} label="Spiritual Healing and Prayer" variant="bento-short"/>
               <div className="bento-card-body"><div className="bento-card-icon am"><Feather/></div><h3>Spiritual Healing &amp; Prayer</h3><p>Intercessory prayer, prophetic encouragement, and spiritual restoration — the sacred cornerstone.</p><div className="bento-arrow" style={{color:'var(--am-500)'}}>Explore <ChevronRight size={14}/></div></div>
             </Link>
             <Link to="/wellbeing/herbal" className="bento-card col-span-5">
-              <img src={I.herbal} alt="" className="bento-card-img short"/>
+              <ServiceFilm film={FILM.herbalMedicine} poster={I.herbal} label="Herbal and Natural Medicine" variant="bento-short"/>
               <div className="bento-card-body"><div className="bento-card-icon sg"><Leaf/></div><h3>Herbal &amp; Natural Medicine</h3><p>Plant-based healing protocols and nutritional guidance rooted in integrative wisdom.</p><div className="bento-arrow" style={{color:'var(--sg-500)'}}>Explore <ChevronRight size={14}/></div></div>
             </Link>
             <Link to="/wellbeing/energy" className="bento-card col-span-4 am-card">
+              <ServiceFilm film={FILM.energyWellness} poster={I.energy} label="Energy and Body Wellness" variant="bento"/>
               <div className="bento-card-body"><div className="bento-card-icon"><Sun/></div><h3>Energy &amp; Body Wellness</h3><p>Somatic healing and body-based practices that release stored tension and restore balance.</p><div className="bento-arrow">Explore <ChevronRight size={14}/></div></div>
             </Link>
             <Link to="/wellbeing/sound" className="bento-card col-span-4">
-              <img src={I.sound} alt="" className="bento-card-img"/>
+              <ServiceFilm film={FILM.soundTherapy} poster={I.sound} label="Sound and Vibration Therapy" variant="bento"/>
               <div className="bento-card-body"><div className="bento-card-icon am"><Wind/></div><h3>Sound &amp; Vibration Therapy</h3><p>Frequency healing and sacred sound ceremonies that harmonize the nervous system.</p><div className="bento-arrow" style={{color:'var(--am-500)'}}>Explore <ChevronRight size={14}/></div></div>
             </Link>
             <Link to="/wellbeing/coaching" className="bento-card col-span-4">
-              <img src={I.coaching} alt="" className="bento-card-img"/>
+              <ServiceFilm film={FILM.holisticCoaching} poster={I.coaching} label="Holistic Coaching" variant="bento"/>
               <div className="bento-card-body"><div className="bento-card-icon sg"><Activity/></div><h3>Holistic Coaching</h3><p>Whole-life coaching combining spiritual, emotional, and practical strategy.</p><div className="bento-arrow" style={{color:'var(--sg-500)'}}>Explore <ChevronRight size={14}/></div></div>
             </Link>
           </div>
@@ -807,7 +866,7 @@ const wealthRelated = [
 ];
 
 function WealthEmpowerment() {
-  return <ServicePage img={I.wealth} label="Wealth Services" am={false}
+  return <ServicePage img={I.wealth} film={FILM.wealthEmpowerment} label="Wealth Services" am={false}
     breadcrumb={[{label:'Wealth',href:'/wealth'},{label:'Wealth Empowerment',href:'/wealth/empowerment'}]}
     title="Wealth" titleEm="Empowerment."
     sub="Comprehensive financial literacy, debt elimination, and generational wealth planning — for every income level."
@@ -828,7 +887,7 @@ function WealthEmpowerment() {
 }
 
 function WealthInvestment() {
-  return <ServicePage img={I.invest} label="Wealth Services" am={false}
+  return <ServicePage img={I.invest} film={FILM.investmentStrategy} label="Wealth Services" am={false}
     breadcrumb={[{label:'Wealth',href:'/wealth'},{label:'Investment Strategy',href:'/wealth/investment'}]}
     title="Investment" titleEm="Strategy."
     sub="Portfolio construction, asset allocation, and long-term investment planning tailored to your goals and risk profile."
@@ -849,7 +908,7 @@ function WealthInvestment() {
 }
 
 function WealthProtection() {
-  return <ServicePage img={I.protect} label="Wealth Services" am={false}
+  return <ServicePage img={I.protect} film={FILM.assetProtection} label="Wealth Services" am={false}
     breadcrumb={[{label:'Wealth',href:'/wealth'},{label:'Asset Protection',href:'/wealth/protection'}]}
     title="Asset" titleEm="Protection."
     sub="Legal structures, risk management, and estate planning that defend everything you've worked to build."
@@ -870,7 +929,7 @@ function WealthProtection() {
 }
 
 function WealthEducation() {
-  return <ServicePage img={I.educate} label="Wealth Services" am={false}
+  return <ServicePage img={I.educate} film={FILM.financialEducation} label="Wealth Services" am={false}
     breadcrumb={[{label:'Wealth',href:'/wealth'},{label:'Financial Education',href:'/wealth/education'}]}
     title="Financial" titleEm="Education."
     sub="Structured workshops, live seminars, and a growing library of wealth-building resources for every knowledge level."
@@ -891,7 +950,7 @@ function WealthEducation() {
 }
 
 function WealthBusiness() {
-  return <ServicePage img={I.business} label="Wealth Services" am={false}
+  return <ServicePage img={I.business} film={FILM.businessWealth} label="Wealth Services" am={false}
     breadcrumb={[{label:'Wealth',href:'/wealth'},{label:'Business Wealth',href:'/wealth/business'}]}
     title="Business" titleEm="Wealth."
     sub="Entrepreneur-focused financial strategy — from startup cash flow to exit planning and everything in between."
@@ -912,7 +971,7 @@ function WealthBusiness() {
 }
 
 function WealthCommunity() {
-  return <ServicePage img={I.community} label="Wealth Services" am={false}
+  return <ServicePage img={I.community} film={FILM.communityProsperity} label="Wealth Services" am={false}
     breadcrumb={[{label:'Wealth',href:'/wealth'},{label:'Community Prosperity',href:'/wealth/community'}]}
     title="Community" titleEm="Prosperity."
     sub="Group wealth-building cohorts, peer accountability, and community investment networks that lift everyone together."
@@ -940,15 +999,15 @@ function Wealth() {
       <section className="section">
         <div className="container">
           {[
-            {img:I.wealth,href:'/wealth/empowerment',tag:'Core Service',title:'Wealth Empowerment',desc:'Financial literacy, debt elimination, and generational wealth planning. The foundation every financial journey needs.'},
-            {img:I.invest,href:'/wealth/investment',tag:'Advisory',title:'Investment Strategy',desc:'Portfolio construction and long-term investment planning tailored to your goals and risk tolerance.'},
-            {img:I.protect,href:'/wealth/protection',tag:'Protection',title:'Asset Protection',desc:'Legal structures, estate planning, and risk management frameworks that defend everything you build.'},
-            {img:I.educate,href:'/wealth/education',tag:'Education',title:'Financial Education',desc:'Workshops, seminars, and a growing resource library for every financial knowledge level.'},
-            {img:I.business,href:'/wealth/business',tag:'Entrepreneurs',title:'Business Wealth',desc:'Entrepreneur-focused strategy from startup cash flow to exit planning and everything between.'},
-            {img:I.community,href:'/wealth/community',tag:'Community',title:'Community Prosperity',desc:'Group wealth-building cohorts and peer networks that accelerate everyone\'s financial progress.'},
+            {img:I.wealth,film:FILM.wealthEmpowerment,href:'/wealth/empowerment',tag:'Core Service',title:'Wealth Empowerment',desc:'Financial literacy, debt elimination, and generational wealth planning. The foundation every financial journey needs.'},
+            {img:I.invest,film:FILM.investmentStrategy,href:'/wealth/investment',tag:'Advisory',title:'Investment Strategy',desc:'Portfolio construction and long-term investment planning tailored to your goals and risk tolerance.'},
+            {img:I.protect,film:FILM.assetProtection,href:'/wealth/protection',tag:'Protection',title:'Asset Protection',desc:'Legal structures, estate planning, and risk management frameworks that defend everything you build.'},
+            {img:I.educate,film:FILM.financialEducation,href:'/wealth/education',tag:'Education',title:'Financial Education',desc:'Workshops, seminars, and a growing resource library for every financial knowledge level.'},
+            {img:I.business,film:FILM.businessWealth,href:'/wealth/business',tag:'Entrepreneurs',title:'Business Wealth',desc:'Entrepreneur-focused strategy from startup cash flow to exit planning and everything between.'},
+            {img:I.community,film:FILM.communityProsperity,href:'/wealth/community',tag:'Community',title:'Community Prosperity',desc:'Group wealth-building cohorts and peer networks that accelerate everyone\'s financial progress.'},
           ].map(p=>(
             <Link to={p.href} className="program-row" key={p.title}>
-              <img src={p.img} alt={p.title} className="program-row-img"/>
+              <ServiceFilm film={p.film} poster={p.img} label={p.title} variant="row"/>
               <div className="program-row-body">
                 <span className="program-type">{p.tag}</span>
                 <h3>{p.title}</h3>
@@ -976,7 +1035,7 @@ const wbRelated = [
 ];
 
 function WellbeingSpiritual() {
-  return <ServicePage img={I.prayer} label="Well-being & Ministry" am={true}
+  return <ServicePage img={I.prayer} film={FILM.spiritualHealing} label="Well-being & Ministry" am={true}
     breadcrumb={[{label:'Well-being',href:'/wellbeing'},{label:'Spiritual Healing',href:'/wellbeing/spiritual'}]}
     title="Spiritual Healing" titleEm="& Prayer."
     sub="Faith-rooted, covenant-protected healing — intercessory prayer, prophetic encouragement, and spiritual restoration."
@@ -997,7 +1056,7 @@ function WellbeingSpiritual() {
 }
 
 function WellbeingEnergy() {
-  return <ServicePage img={I.energy} label="Well-being & Ministry" am={true}
+  return <ServicePage img={I.energy} film={FILM.energyWellness} label="Well-being & Ministry" am={true}
     breadcrumb={[{label:'Well-being',href:'/wellbeing'},{label:'Energy & Body Wellness',href:'/wellbeing/energy'}]}
     title="Energy &amp; Body" titleEm="Wellness."
     sub="Somatic healing, Reiki, breathwork, and body-based practices that release stored trauma and restore natural balance."
@@ -1018,7 +1077,7 @@ function WellbeingEnergy() {
 }
 
 function WellbeingHerbal() {
-  return <ServicePage img={I.herbal} label="Well-being & Ministry" am={false}
+  return <ServicePage img={I.herbal} film={FILM.herbalMedicine} label="Well-being & Ministry" am={false}
     breadcrumb={[{label:'Well-being',href:'/wellbeing'},{label:'Herbal Medicine',href:'/wellbeing/herbal'}]}
     title="Herbal &amp; Natural" titleEm="Medicine."
     sub="Plant-based healing protocols, nutritional guidance, and traditional natural remedies rooted in integrative medicine."
@@ -1039,7 +1098,7 @@ function WellbeingHerbal() {
 }
 
 function WellbeingSound() {
-  return <ServicePage img={I.sound} label="Well-being & Ministry" am={true}
+  return <ServicePage img={I.sound} film={FILM.soundTherapy} label="Well-being & Ministry" am={true}
     breadcrumb={[{label:'Well-being',href:'/wellbeing'},{label:'Sound Therapy',href:'/wellbeing/sound'}]}
     title="Sound &amp; Vibration" titleEm="Therapy."
     sub="Frequency healing, sacred sound ceremonies, and vibrational tools that harmonize the nervous system and open channels of deep rest."
@@ -1060,7 +1119,7 @@ function WellbeingSound() {
 }
 
 function WellbeingMental() {
-  return <ServicePage img={I.mental} label="Well-being & Ministry" am={true}
+  return <ServicePage img={I.mental} film={FILM.emotionalWellness} label="Well-being & Ministry" am={true}
     breadcrumb={[{label:'Well-being',href:'/wellbeing'},{label:'Emotional & Mental Health',href:'/wellbeing/mental'}]}
     title="Emotional &amp; Mental" titleEm="Health."
     sub="Trauma-informed, faith-integrated emotional wellness — safe, sacred support for healing grief, anxiety, and emotional wounds."
@@ -1081,7 +1140,7 @@ function WellbeingMental() {
 }
 
 function WellbeingCoaching() {
-  return <ServicePage img={I.coaching} label="Well-being & Ministry" am={false}
+  return <ServicePage img={I.coaching} film={FILM.holisticCoaching} label="Well-being & Ministry" am={false}
     breadcrumb={[{label:'Well-being',href:'/wellbeing'},{label:'Holistic Coaching',href:'/wellbeing/coaching'}]}
     title="Holistic" titleEm="Coaching."
     sub="Whole-life guidance combining spiritual formation, emotional wellness, physical health, and practical life strategy."
@@ -1120,15 +1179,15 @@ function WellBeing() {
       <section className="section">
         <div className="container">
           {[
-            {img:I.prayer,href:'/wellbeing/spiritual',tag:'Ministry Core',title:'Spiritual Healing & Prayer',desc:'Intercessory prayer, prophetic encouragement, and spiritual restoration — the sacred cornerstone.',am:true},
-            {img:I.energy,href:'/wellbeing/energy',tag:'Energy & Body',title:'Energy & Body Wellness',desc:'Reiki, breathwork, and somatic healing that releases stored tension and restores natural balance.',am:true},
-            {img:I.herbal,href:'/wellbeing/herbal',tag:'Natural Medicine',title:'Herbal & Natural Medicine',desc:'Plant-based protocols and nutritional guidance rooted in integrative medicine wisdom.',am:false},
-            {img:I.sound,href:'/wellbeing/sound',tag:'Vibrational',title:'Sound & Vibration Therapy',desc:'Sacred sound ceremonies and frequency healing that harmonize the nervous system.',am:true},
-            {img:I.mental,href:'/wellbeing/mental',tag:'Emotional Health',title:'Emotional & Mental Health',desc:'Trauma-informed, faith-integrated emotional wellness for grief, anxiety, and healing.',am:true},
-            {img:I.coaching,href:'/wellbeing/coaching',tag:'Coaching',title:'Holistic Coaching',desc:'Whole-life guidance — spiritual, emotional, physical, and practical strategy unified.',am:false},
+            {img:I.prayer,film:FILM.spiritualHealing,href:'/wellbeing/spiritual',tag:'Ministry Core',title:'Spiritual Healing & Prayer',desc:'Intercessory prayer, prophetic encouragement, and spiritual restoration — the sacred cornerstone.',am:true},
+            {img:I.energy,film:FILM.energyWellness,href:'/wellbeing/energy',tag:'Energy & Body',title:'Energy & Body Wellness',desc:'Reiki, breathwork, and somatic healing that releases stored tension and restores natural balance.',am:true},
+            {img:I.herbal,film:FILM.herbalMedicine,href:'/wellbeing/herbal',tag:'Natural Medicine',title:'Herbal & Natural Medicine',desc:'Plant-based protocols and nutritional guidance rooted in integrative medicine wisdom.',am:false},
+            {img:I.sound,film:FILM.soundTherapy,href:'/wellbeing/sound',tag:'Vibrational',title:'Sound & Vibration Therapy',desc:'Sacred sound ceremonies and frequency healing that harmonize the nervous system.',am:true},
+            {img:I.mental,film:FILM.emotionalWellness,href:'/wellbeing/mental',tag:'Emotional Health',title:'Emotional & Mental Health',desc:'Trauma-informed, faith-integrated emotional wellness for grief, anxiety, and healing.',am:true},
+            {img:I.coaching,film:FILM.holisticCoaching,href:'/wellbeing/coaching',tag:'Coaching',title:'Holistic Coaching',desc:'Whole-life guidance — spiritual, emotional, physical, and practical strategy unified.',am:false},
           ].map(p=>(
             <Link to={p.href} className="program-row" key={p.title}>
-              <img src={p.img} alt={p.title} className="program-row-img"/>
+              <ServiceFilm film={p.film} poster={p.img} label={p.title} variant="row"/>
               <div className="program-row-body">
                 <span className={`program-type${p.am?' am':''}`}>{p.tag}</span>
                 <h3>{p.title}</h3><p>{p.desc}</p>
@@ -1613,6 +1672,7 @@ export default function PublicSite() {
         <Route path="/trust-center/:slug" element={<TrustCenter/>}/>
         <Route path="/donate"             element={<Donate/>}/>
         <Route path="/contact"            element={<Contact/>}/>
+        <Route path="/store"              element={<Layout><StorePage/></Layout>}/>
 
         {/* 404 fallback */}
         <Route path="*" element={<Home/>}/>
